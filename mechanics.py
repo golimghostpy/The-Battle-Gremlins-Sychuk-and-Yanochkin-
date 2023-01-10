@@ -1,5 +1,6 @@
 import pygame
 
+
 UNITS = {
     # команда, скорость, дальность, урон, здоровье, анимации, скорость атаки, поле, аое, цена, кд
     1: (1, 0.01, 20, 5, 20, '', 2, None, False, 50, 3),
@@ -25,6 +26,7 @@ class Field:
         self.schedule = schedule
         self.dead_set = set()
         self.towers = {1: None, -1: None}
+        self.display_levels = [{1: None, -1: None} for _ in range(50)]
 
     def winner(self):
         if self.towers[1].alive and self.towers[-1].alive:
@@ -76,13 +78,23 @@ class Unit(pygame.sprite.Sprite):
         self.pos = None
         self.area = area
         self.timer = 0
+        self.display_level = None
 
     def put(self, position):
         self.field.units[self.team].add(self)
         self.pos = position
+        for i in range(len(self.field.display_levels)):
+            if not self.field.display_levels[i][self.team]:
+                self.display_level = i
+                self.field.display_levels[i][self.team] = self
+                return
+        self.field.display_levels.append({1: None, -1: None})
+        self.field.display_levels[-1][self.team] = self
+
 
     def disappear(self):
         self.field.units[self.team].remove(self)
+        self.field.display_levels[self.display_level][self.team] = None
 
     def take_damage(self, damage):
         self.health -= damage
@@ -108,6 +120,9 @@ class Unit(pygame.sprite.Sprite):
 
     def __str__(self):
         return f'Team: {self.team}, HP: {self.health}, position: {str(self.pos)[:4]}, attacking: {self.attacking}, moving: {not self.attacking}'
+
+    def __repr__(self):
+        return f'Unit({self.team}, {self.health})'
 
 
 class Tower(Unit):
