@@ -70,6 +70,13 @@ class Field:
         self.dead_set = set()
         self.towers = {1: None, -1: None}
 
+    def winner(self):
+        if self.towers[1].alive and self.towers[-1].alive:
+            return None
+        if self.towers[1].alive:
+            return 1
+        return -1
+
     def main_cycle(self, dt):
         for team in [1, -1]:
             for unit in self.units[team]:
@@ -150,14 +157,19 @@ class Unit(pygame.sprite.Sprite):
 class Tower(Unit):
     def __init__(self, team, health, images, field):
         super().__init__(team, 0, 0, 0, health, images, 0, field, False)
+        self.alive = False
 
     def put(self, position):
         super().put(position)
-        self.field[self.team] = self
+        self.field.towers[self.team] = self
+        self.alive = True
+
+    def disappear(self):
+        super().disappear()
+        self.alive = False
 
     def tick(self, dt):
         pass
-
 
 if __name__ == '__main__':
     pass
