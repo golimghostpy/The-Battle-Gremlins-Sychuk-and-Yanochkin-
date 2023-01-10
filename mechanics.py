@@ -19,50 +19,6 @@ FIELD_LENGTH = 700
 START = 20
 
 
-class Display:
-    def __init__(self):
-        self.condition = None
-        self.width = 1000
-        self.height = 600
-        self.screen = None
-        self.running = False
-        self.field = None
-        self.clock = None  # pygame.time.Clock()
-
-    def build(self):
-        pygame.init()
-        pygame.display.set_caption('The Battle Goblins')
-        self.screen = pygame.display.set_mode((self.width, self.height))
-        self.screen.fill((0, 0, 0))
-
-    #  pygame.display.flip()
-
-    def position_A(self, event):
-        pass
-
-    def position_B(self, event):
-        pass
-
-    def position_C(self, event):
-        pass
-
-    def main_cycle(self):
-        self.running = True
-        while self.running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                    continue
-                if self.condition == 'A':
-                    self.position_A(event)
-                if self.condition == 'B':
-                    self.position_B(event)
-                if self.condition == 'C':
-                    self.position_C(event)
-            pygame.display.flip()
-        pygame.quit()
-
-
 class Field:
     def __init__(self, schedule):
         self.units = {1: set(), -1: set()}
