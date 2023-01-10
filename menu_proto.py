@@ -1,7 +1,7 @@
 import pygame
 import os
 import sys
-
+from mechanics import *
 
 class Display:
     def __init__(self):
@@ -110,46 +110,6 @@ class Display:
         else:
             image = image.convert_alpha()
         return image
-
-
-class Field:
-    def __init__(self):
-        self.units = {1: set(), -1: set()}
-
-    def check_attack(self, unit):
-        pass
-
-
-class Unit(pygame.sprite.Sprite):
-    def init(self, cost, team, speed, range, damage, health, cooldown, image, haste, field, *group):
-        super().__init__(*group)
-        self.image = image  # изображение юнита
-        self.team = team  # команда юнита (враг или союзник)
-        self.speed = speed  # скорость перемещения юнита
-        self.damage = damage  # урон юнита
-        self.range = range  # дальность атаки юнита
-        self.health = health  # здоровье юнита
-        self.cooldown = cooldown  # перезарядка юнита
-        self.cost = cost  # цена юнита (определена только для союзных)
-        self.haste = haste  # скорость атаки юнита
-        self.field = field  # поле, на котором сражается юнит
-        self.moving = False  # находится ли юнит в движении
-        self.alive = False  # жив ли юнит
-        self.attacking = False  # находится ли юнит в процессе атаки
-        self.pos = None
-
-    def put(self):
-        self.alive = True
-        self.field.units[self.team].add(self)
-
-    def die(self):
-        self.alive = False
-        self.field.units[self.team].remove(self)
-
-    def take_damage(self, damage):
-        self.health -= damage
-        if self.health <= 0:
-            self.die()
 
 
 def main():
