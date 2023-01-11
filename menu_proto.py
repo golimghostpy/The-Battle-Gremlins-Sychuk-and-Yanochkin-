@@ -4,16 +4,18 @@ import sys
 from mechanics import *
 
 #  conditions
-A, B, C = 1, 2, 3
+MAIN, LEVELS, UNITS, LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5 = 1, 2, 3, 4, 5, 6, 7, 8
+
 class Display:
     def __init__(self):
-        self.condition = A
+        self.condition = MAIN
         self.width = 754
         self.height = 432
         self.screen = None
         self.running = False
         self.field = None
         self.clock = None  # pygame.time.Clock()
+        self.paused = False
 
     def build(self):
         pygame.init()
@@ -24,34 +26,34 @@ class Display:
 
     #  pygame.display.flip()
 
-    def draw_A(self):
+    def draw_MAIN(self):
         self.screen.blit(self.load_image('menu_background.png', None), (0, 0))
-        self.screen.blit(self.load_image('title.png'), (self.width // 2 - 247, self.height // 5))
-        self.screen.blit(self.load_image('start_button.png'), (self.width // 2 - 118, self.height // 5 * 2))
-        self.screen.blit(self.load_image('gremlins_menu.png'), (self.width // 2 - 86, self.height // 5 * 3))
-        self.screen.blit(self.load_image('quit.png'), (self.width // 2 - 45, self.height // 5 * 4))
+        self.screen.blit(self.load_image('MAIN/title.png'), (self.width // 2 - 247, self.height // 5))
+        self.screen.blit(self.load_image('MAIN/start_button.png'), (self.width // 2 - 118, self.height // 5 * 2))
+        self.screen.blit(self.load_image('MAIN/gremlins_menu.png'), (self.width // 2 - 86, self.height // 5 * 3))
+        self.screen.blit(self.load_image('MAIN/quit.png'), (self.width // 2 - 45, self.height // 5 * 4))
 
-    def move_from_A_to_B(self, event):
+    def move_from_MAIN_to_LEVELS(self, event):
         x, y = event.pos
         if (self.width // 2 - 118 <= x <= self.width // 2 + 118 and
                 self.height // 5 * 2 <= y <= self.height // 5 * 2 + 56):
             pygame.draw.rect(self.screen, pygame.Color('green'),
                              (self.width // 2 - 120, self.height // 5 * 2, 236, 56), 2)
-            self.condition = B
+            self.condition = LEVELS
             return True
         return False
 
-    def move_from_A_to_C(self, event):
+    def move_from_MAIN_to_UNITS(self, event):
         x, y = event.pos
         if (self.width // 2 - 86 <= x <= self.width // 2 + 86 and
                 self.height // 5 * 3 <= y <= self.height // 5 * 3 + 53):
             pygame.draw.rect(self.screen, pygame.Color('green'),
                              (self.width // 2 - 88, self.height // 5 * 3, 172, 53), 2)
-            self.condition = C
+            self.condition = UNITS
             return True
         return False
 
-    def leave_game_from_A(self, event):
+    def leave_game_from_MAIN(self, event):
         x, y = event.pos
         if (self.width // 2 - 45 <= x <= self.width // 2 + 45 and
                 self.height // 5 * 4 <= y <= self.height // 5 * 4 + 53):
@@ -61,51 +63,93 @@ class Display:
             return True
         return False
 
-    def position_A(self, event):
-        self.draw_A()
+    def position_MAIN(self, event):
+        self.draw_MAIN()
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
-            if self.move_from_A_to_B(event):
+            if self.move_from_MAIN_to_LEVELS(event):
                 return
-            elif self.move_from_A_to_C(event):
+            elif self.move_from_MAIN_to_UNITS(event):
                 return
-            elif self.leave_game_from_A(event):
+            elif self.leave_game_from_MAIN(event):
                 return
 
 
-    def draw_B(self):
+    def draw_LEVELS(self):
         self.screen.blit(self.load_image('menu_background.png', None), (0, 0))
-        self.screen.blit(self.load_image('levels_txt.png'), (self.width // 2 - 100, 20))
-        self.screen.blit(self.load_image('level_1.png'), (self.width // 5 - 110, self.height // 4))
-        self.screen.blit(self.load_image('level_2.png'), (self.width // 5 * 2 - 110, self.height // 4))
-        self.screen.blit(self.load_image('level_3.png'), (self.width // 5 * 3 - 110, self.height // 4))
-        self.screen.blit(self.load_image('level_4.png'), (self.width // 5 * 4 - 110, self.height // 4))
-        self.screen.blit(self.load_image('level_5.png'), (self.width - 110, self.height // 4))
+        self.screen.blit(self.load_image('LEVELS/levels_txt.png'), (self.width // 2 - 100, 20))
+        self.screen.blit(self.load_image('LEVELS/level_1.png'), (self.width // 5 - 110, self.height // 4))
+        self.screen.blit(self.load_image('LEVELS/level_2.png'), (self.width // 5 * 2 - 110, self.height // 4))
+        self.screen.blit(self.load_image('LEVELS/level_3.png'), (self.width // 5 * 3 - 110, self.height // 4))
+        self.screen.blit(self.load_image('LEVELS/level_4.png'), (self.width // 5 * 4 - 110, self.height // 4))
+        self.screen.blit(self.load_image('LEVELS/level_5.png'), (self.width - 110, self.height // 4))
         self.screen.blit(self.load_image('back_btn.png'), (self.width // 2 - 83, 330))
 
-    def position_B(self, event):
-        self.draw_B()
+    def position_LEVELS(self, event):
+        self.draw_LEVELS()
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
             if (self.width // 2 - 83 <= x <= self.width // 2 + 83 and
                     330 <= y <= 410):
                 pygame.draw.rect(self.screen, pygame.Color('green'),
                                  (self.width // 2 - 83, 330, 166, 80), 2)
-                self.condition = A
+                self.condition = MAIN
+            elif self.move_from_LEVELS_to_START(event):
+                return
+            elif self.move_from_LEVELS_to_START(event) == LEVEL_1:
+                return
 
-    def draw_C(self):
+    def draw_UNITS(self):
         self.screen.blit(self.load_image('menu_background.png', None), (0, 0))
         self.screen.blit(self.load_image('back_btn.png'), (self.width // 2 - 83, 330))
 
-    def position_C(self, event):
-        self.draw_C()
+    def position_UNITS(self, event):
+        self.draw_UNITS()
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
             if (self.width // 2 - 83 <= x <= self.width // 2 + 83 and
                     330 <= y <= 410):
                 pygame.draw.rect(self.screen, pygame.Color('green'),
                                  (self.width // 2 - 83, 330, 166, 80), 2)
-                self.condition = A
+                self.condition = MAIN
+
+    def move_from_LEVELS_to_START(self, event):
+        x, y = event.pos
+        if (self.width // 5 - 110 <= x <= self.width // 5 - 30 and self.height // 4 <= y <= self.height // 4 + 80):
+            pygame.draw.rect(self.screen, pygame.Color('green'),
+                             (self.width // 5 - 110, self.height // 4, 84, 84), 2)
+            self.condition = LEVEL_1
+            return LEVEL_1
+        elif (1 <= x <= 1 and 1 <= y <= 1):
+
+            self.condition = LEVEL_2
+            return LEVEL_2
+        elif (1 <= x <= 1 and 1 <= y <= 1):
+
+            self.condition = LEVEL_3
+            return LEVEL_3
+        elif (1 <= x <= 1 and 1 <= y <= 1):
+
+            self.condition = LEVEL_4
+            return LEVEL_4
+        elif (1 <= x <= 1 and 1 <= y <= 1):
+
+            self.condition = LEVEL_5
+            return LEVEL_5
+        return False
+
+    def draw_LEVEL_1(self):
+        self.screen.blit(self.load_image('LEVEL_1/background_1.png', None), (0, 0))
+
+    def position_LEVEL_1(self, event):
+        self.draw_LEVEL_1()
+        if self.paused:
+            self.draw_pause()
+
+
+    def draw_pause(self):
+        pass
+
 
     def main_cycle(self):
         self.running = True
@@ -114,12 +158,14 @@ class Display:
                 if event.type == pygame.QUIT:
                     self.running = False
                     continue
-                if self.condition == A:
-                    self.position_A(event)
-                elif self.condition == B:
-                    self.position_B(event)
-                elif self.condition == C:
-                    self.position_C(event)
+                if self.condition == MAIN:
+                    self.position_MAIN(event)
+                elif self.condition == LEVELS:
+                    self.position_LEVELS(event)
+                elif self.condition == UNITS:
+                    self.position_UNITS(event)
+                elif self.condition == LEVEL_1:
+                    self.position_LEVEL_1(event)
             pygame.display.flip()
         pygame.quit()
 
