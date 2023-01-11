@@ -13,6 +13,7 @@ SCHEDULES = {
     LEVEL_5: []
 }
 
+
 class Display:
     def __init__(self):
         self.condition = MAIN
@@ -81,7 +82,6 @@ class Display:
             elif self.leave_game_from_MAIN(event):
                 return
 
-
     def draw_LEVELS(self):
         self.screen.blit(self.load_image('menu_background.png', None), (0, 0))
         self.screen.blit(self.load_image('LEVELS/levels_txt.png'), (self.width // 2 - 100, 20))
@@ -111,7 +111,7 @@ class Display:
                 pygame.draw.rect(self.screen, pygame.Color('green'),
                                  (self.width // 2 - 83, 330, 166, 80), 2)
                 self.condition = MAIN
-            elif self.move_from_LEVELS_to_START(event) == LEVEL_1:
+            elif self.move_from_LEVELS_to_START(event):
                 self.starting_LEVEL()
                 return
 
@@ -135,34 +135,51 @@ class Display:
             pygame.draw.rect(self.screen, pygame.Color('green'),
                              (self.width // 5 - 110, self.height // 4, 84, 84), 2)
             self.condition = LEVEL_1
-            return LEVEL_1
-        elif 1 <= x <= 1 and 1 <= y <= 1:
-
+            return True
+        elif self.width // 5 * 2 - 110 <= x <= self.width // 5 * 2 - 30 and self.height // 4 <= y <= self.height // 4 + 80:
+            pygame.draw.rect(self.screen, pygame.Color('green'),
+                             (self.width // 5 * 2 - 110, self.height // 4, 84, 84), 2)
             self.condition = LEVEL_2
-            return LEVEL_2
-        elif 1 <= x <= 1 and 1 <= y <= 1:
-
+            return True
+        elif self.width // 5 * 3 - 110 <= x <= self.width // 5 * 3 - 30 and self.height // 4 <= y <= self.height // 4 + 80:
+            pygame.draw.rect(self.screen, pygame.Color('green'),
+                             (self.width // 5 * 3 - 110, self.height // 4, 84, 84), 2)
             self.condition = LEVEL_3
-            return LEVEL_3
-        elif 1 <= x <= 1 and 1 <= y <= 1:
-
+            return True
+        elif self.width // 5 * 4 - 110 <= x <= self.width // 5 * 4 - 30 and self.height // 4 <= y <= self.height // 4 + 80:
+            pygame.draw.rect(self.screen, pygame.Color('green'),
+                             (self.width // 5 * 4 - 110, self.height // 4, 84, 84), 2)
             self.condition = LEVEL_4
-            return LEVEL_4
-        elif 1 <= x <= 1 and 1 <= y <= 1:
-
+            return True
+        elif self.width - 110 <= x <= self.width - 30 and self.height // 4 <= y <= self.height // 4 + 80:
+            pygame.draw.rect(self.screen, pygame.Color('green'),
+                             (self.width - 110, self.height // 4, 84, 84), 2)
             self.condition = LEVEL_5
-            return LEVEL_5
+            return True
         return False
 
-    def draw_LEVEL_1(self):
-        self.screen.blit(self.load_image('LEVEL_1/background_1.png', None), (0, 0))
+    def draw_LEVEL(self):
+        self.screen.blit(self.load_image(f'LEVEL_{self.condition - 3}/background_{self.condition - 3}.png', None),
+                         (0, 0))
 
-    def position_LEVEL_1(self, event):
-        self.draw_LEVEL_1()
+    def position_LEVEL(self, event):
+        self.draw_LEVEL()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.paused = not self.paused
         #  drawing units
         if self.paused:
             self.draw_pause()
             self.clock.tick()
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                x, y = event.pos
+                if self.width // 2 - self.cont.get_width() // 2 <= x <= self.width // 2 + self.cont.get_width() // 2 and \
+                        self.height // 2 - 40 <= y <= self.height // 2 - 40 + self.cont.get_height():
+                    self.paused = False
+                elif self.width // 2 - self.esc.get_width() // 2 <= x <= self.width // 2 + self.esc.get_width() // 2 and \
+                        self.height // 2 + 80 <= y <= self.height // 2 + 80 + self.esc.get_height():
+                    self.paused = False
+                    self.condition = LEVELS
         else:
             #
             #  freaking ton of player actions
@@ -172,8 +189,16 @@ class Display:
                 self.condition = END_SCREEN
 
     def draw_pause(self):
-        pass
-
+        pygame.draw.rect(self.screen, pygame.Color('Grey'),
+                         (self.width // 4, self.height // 4, self.width // 2, self.height // 2))
+        font = pygame.font.Font(None, 50)
+        pause = font.render('Pause', True, 'black')
+        self.screen.blit(pause, (self.width // 2 - pause.get_width() // 2, self.height // 2 - 100))
+        font = pygame.font.Font(None, 36)
+        self.cont = font.render('Continue', True, 'black')
+        self.screen.blit(self.cont, (self.width // 2 - self.cont.get_width() // 2, self.height // 2 - 40))
+        self.esc = font.render('Escape', True, 'black')
+        self.screen.blit(self.esc, (self.width // 2 - self.esc.get_width() // 2, self.height // 2 + 80))
 
     def main_cycle(self):
         self.running = True
@@ -188,8 +213,8 @@ class Display:
                     self.position_LEVELS(event)
                 elif self.condition == UNITS:
                     self.position_UNITS(event)
-                elif self.condition == LEVEL_1:
-                    self.position_LEVEL_1(event)
+                elif self.condition in [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5]:
+                    self.position_LEVEL(event)
             pygame.display.flip()
         pygame.quit()
 
