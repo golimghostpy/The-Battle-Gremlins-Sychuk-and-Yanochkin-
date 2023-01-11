@@ -1,6 +1,5 @@
 import pygame
 
-
 UNITS = {
     # команда, скорость, дальность, урон, здоровье, анимации, скорость атаки, поле, аое, цена, кд
     1: (1, 0.01, 20, 5, 20, '', 2, None, False, 50, 3),
@@ -45,20 +44,20 @@ class Field:
 
     def attack_check(self, unit):
         for enemy in self.units[-unit.team]:
-            if 0 <= unit.team * (enemy.pos - unit.pos) <= unit.range:
+            if 0 <= unit.team * (enemy.position - unit.position) <= unit.range:
                 return True
         return False
 
     def commit_attack(self, unit):
         if unit.area:
             for enemy in self.units[-unit.team]:
-                if 0 <= unit.team * (enemy.pos - unit.pos) <= unit.range:
+                if 0 <= unit.team * (enemy.position - unit.position) <= unit.range:
                     enemy.take_damage(unit.damage)
         else:
             target, distance = None, unit.range
             for enemy in self.units[-unit.team]:
-                if 0 <= unit.team * (enemy.pos - unit.pos) <= distance:
-                    target, distance = enemy, unit.team * (enemy.pos - unit.pos)
+                if 0 <= unit.team * (enemy.position - unit.position) <= distance:
+                    target, distance = enemy, unit.team * (enemy.position - unit.position)
             if target:
                 target.take_damage(unit.damage)
 
@@ -75,14 +74,17 @@ class Unit(pygame.sprite.Sprite):
         self.haste = haste  # скорость атаки юнита
         self.field = field  # поле, на котором сражается юнит
         self.attacking = False  # находится ли юнит в процессе атаки
-        self.pos = None
+        self.position = None
         self.area = area
-        self.timer = 0
+        self.attack_timer = 0
         self.display_level = None
+        self.phase = 0
+        self.phase_timer = 0
+        self.animation_periods = {False: {0: 0.5, 1: 0.5}, True: {0: 0.75 * self.haste, 1: 0.25 * self.haste}}
 
     def put(self, position):
         self.field.units[self.team].add(self)
-        self.pos = position
+        self.position = position
         for i in range(len(self.field.display_levels)):
             if not self.field.display_levels[i][self.team]:
                 self.display_level = i
@@ -90,7 +92,6 @@ class Unit(pygame.sprite.Sprite):
                 return
         self.field.display_levels.append({1: None, -1: None})
         self.field.display_levels[-1][self.team] = self
-
 
     def disappear(self):
         self.field.units[self.team].remove(self)
@@ -104,22 +105,32 @@ class Unit(pygame.sprite.Sprite):
     def tick(self, dt):
         if not self.attacking:
             self.attacking = self.field.attack_check(self)
+            if self.attacking:
+                self.phase = 0
+                self.phase_timer = 0
+        self.phase_timer += dt
+        if self.phase_timer >= self.animation_periods[self.attacking][self.phase]:
+            self.phase_timer = 0
+            self.phase = 1 - self.phase
         self.act(dt)
+
+    def picture(self):
+        return f'{self.images}/animation{int(self.attacking)}{self.phase}.png'
 
     def act(self, dt):
         if self.attacking:
-            self.timer += dt
-            #  animations
-            if self.timer >= self.haste:
-                self.timer = 0
+            self.attack_timer += dt
+            if self.attack_timer >= self.haste:
+                self.attack_timer = 0
                 self.field.commit_attack(self)
                 self.attacking = False
+                self.phase = 0
+                self.phase_timer = 0
         else:
-            #  animations
-            self.pos += self.team * self.speed * dt
+            self.position += self.team * self.speed * dt
 
     def __str__(self):
-        return f'Team: {self.team}, HP: {self.health}, position: {str(self.pos)[:4]}, attacking: {self.attacking}, moving: {not self.attacking}'
+        return f'Team: {self.team}, HP: {self.health}, pos: {str(self.position)[:4]}, attacking: {self.attacking}'
 
     def __repr__(self):
         return f'Unit({self.team}, {self.health})'
@@ -141,6 +152,10 @@ class Tower(Unit):
 
     def tick(self, dt):
         pass
+
+    def picture(self):
+        return f'{self.images}/animation{int(self.alive)}'
+
 
 if __name__ == '__main__':
     pass

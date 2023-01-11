@@ -22,7 +22,7 @@ class Display:
         self.screen = None
         self.running = False
         self.field = None
-        self.clock = None  # pygame.time.Clock()
+        self.clock = pygame.time.Clock()
         self.paused = False
 
     def build(self):
@@ -93,13 +93,12 @@ class Display:
         self.screen.blit(self.load_image('back_btn.png'), (self.width // 2 - 83, 330))
 
     def starting_LEVEL(self):
-        self.clock = pygame.time.Clock()
+        self.clock.tick()
         self.field = Field(SCHEDULES[self.condition])
         Tower(1, 1500, '', self.field).put(0)
         Tower(-1, 1500, '', self.field).put(0)
 
     def finish_LEVEL(self):
-        self.clock = None
         self.field = None
 
     def position_LEVELS(self, event):
@@ -136,17 +135,20 @@ class Display:
                              (self.width // 5 - 110, self.height // 4, 84, 84), 2)
             self.condition = LEVEL_1
             return True
-        elif self.width // 5 * 2 - 110 <= x <= self.width // 5 * 2 - 30 and self.height // 4 <= y <= self.height // 4 + 80:
+        elif self.width // 5 * 2 - 110 <= x <= self.width // 5 * 2 - 30 and \
+                self.height // 4 <= y <= self.height // 4 + 80:
             pygame.draw.rect(self.screen, pygame.Color('green'),
                              (self.width // 5 * 2 - 110, self.height // 4, 84, 84), 2)
             self.condition = LEVEL_2
             return True
-        elif self.width // 5 * 3 - 110 <= x <= self.width // 5 * 3 - 30 and self.height // 4 <= y <= self.height // 4 + 80:
+        elif self.width // 5 * 3 - 110 <= x <= self.width // 5 * 3 - 30 and \
+                self.height // 4 <= y <= self.height // 4 + 80:
             pygame.draw.rect(self.screen, pygame.Color('green'),
                              (self.width // 5 * 3 - 110, self.height // 4, 84, 84), 2)
             self.condition = LEVEL_3
             return True
-        elif self.width // 5 * 4 - 110 <= x <= self.width // 5 * 4 - 30 and self.height // 4 <= y <= self.height // 4 + 80:
+        elif self.width // 5 * 4 - 110 <= x <= self.width // 5 * 4 - 30 and \
+                self.height // 4 <= y <= self.height // 4 + 80:
             pygame.draw.rect(self.screen, pygame.Color('green'),
                              (self.width // 5 * 4 - 110, self.height // 4, 84, 84), 2)
             self.condition = LEVEL_4
@@ -173,11 +175,11 @@ class Display:
             self.clock.tick()
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 x, y = event.pos
-                if self.width // 2 - self.cont.get_width() // 2 <= x <= self.width // 2 + self.cont.get_width() // 2 and \
-                        self.height // 2 - 40 <= y <= self.height // 2 - 40 + self.cont.get_height():
+                if self.width // 2 - self.cont.get_width() // 2 <= x <= self.width // 2 + self.cont.get_width() // 2 \
+                        and self.height // 2 - 40 <= y <= self.height // 2 - 40 + self.cont.get_height():
                     self.paused = False
-                elif self.width // 2 - self.esc.get_width() // 2 <= x <= self.width // 2 + self.esc.get_width() // 2 and \
-                        self.height // 2 + 80 <= y <= self.height // 2 + 80 + self.esc.get_height():
+                elif self.width // 2 - self.esc.get_width() // 2 <= x <= self.width // 2 + self.esc.get_width() // 2 \
+                        and self.height // 2 + 80 <= y <= self.height // 2 + 80 + self.esc.get_height():
                     self.paused = False
                     self.condition = LEVELS
         else:
