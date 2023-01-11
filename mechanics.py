@@ -19,15 +19,15 @@ FIELD_LENGTH = 700
 START = 20
 
 
-class Field:
+class Field:  # класс поля, контролирующего взаимодействие юнитов
     def __init__(self, schedule):
-        self.units = {1: set(), -1: set()}
-        self.schedule = schedule
-        self.dead_set = set()
-        self.towers = {1: None, -1: None}
-        self.display_levels = [{1: None, -1: None} for _ in range(50)]
+        self.units = {1: set(), -1: set()}  # хранилище всех живых юнитов на поле
+        self.schedule = schedule  # расписание выхода противников на уровне
+        self.dead_set = set()  # множество убитых за итерацию юнитов
+        self.towers = {1: None, -1: None}  # указатели на башни игрока и противника
+        self.display_levels = [{1: None, -1: None} for _ in range(50)]  # уровни отрисовки
 
-    def winner(self):
+    def winner(self):  # выводит победителя (игрок / противник / никто)
         if self.towers[1].alive and self.towers[-1].alive:
             return None
         if self.towers[1].alive:
@@ -42,13 +42,13 @@ class Field:
             unit.disappear()
         self.dead_set.clear()
 
-    def attack_check(self, unit):
+    def attack_check(self, unit):  # проверка на то, может ли атаковать юнит
         for enemy in self.units[-unit.team]:
             if 0 <= unit.team * (enemy.position - unit.position) <= unit.range:
                 return True
         return False
 
-    def commit_attack(self, unit):
+    def commit_attack(self, unit):  # выполнение атаки юнитов
         if unit.area:
             for enemy in self.units[-unit.team]:
                 if 0 <= unit.team * (enemy.position - unit.position) <= unit.range:
@@ -62,9 +62,9 @@ class Field:
                 target.take_damage(unit.damage)
 
 
-class Unit(pygame.sprite.Sprite):
+class Unit:  # класс боевого юнита
     def __init__(self, team, speed, range, damage, health, images, haste, field, area):
-        super().__init__()
+        self.sprite = pygame.sprite.Sprite()  # используется для отрисовки
         self.images = images  # изображение юнита
         self.team = team  # команда юнита (враг или союзник)
         self.speed = speed  # скорость перемещения юнита
@@ -74,15 +74,15 @@ class Unit(pygame.sprite.Sprite):
         self.haste = haste  # скорость атаки юнита
         self.field = field  # поле, на котором сражается юнит
         self.attacking = False  # находится ли юнит в процессе атаки
-        self.position = None
-        self.area = area
-        self.attack_timer = 0
-        self.display_level = None
-        self.phase = 0
-        self.phase_timer = 0
+        self.position = None  # расположение юнита
+        self.area = area  # бьёт юнит по зоне или по одиночной цели
+        self.attack_timer = 0  # для отслеживания задержки атаки
+        self.display_level = None  # для отрисовки юнитов поверх друг друга
+        self.phase = 0  # фаза (для анимаций)
+        self.phase_timer = 0  # таймеры смены фаз
         self.animation_periods = {False: {0: 0.5, 1: 0.5}, True: {0: 0.75 * self.haste, 1: 0.25 * self.haste}}
 
-    def put(self, position):
+    def put(self, position):  # постановка юнита на поле боя
         self.field.units[self.team].add(self)
         self.position = position
         for i in range(len(self.field.display_levels)):
@@ -93,16 +93,16 @@ class Unit(pygame.sprite.Sprite):
         self.field.display_levels.append({1: None, -1: None})
         self.field.display_levels[-1][self.team] = self
 
-    def disappear(self):
+    def disappear(self):  # "уборка трупа"
         self.field.units[self.team].remove(self)
         self.field.display_levels[self.display_level][self.team] = None
 
-    def take_damage(self, damage):
+    def take_damage(self, damage):  # получение урона юнитом
         self.health -= damage
         if self.health <= 0:
             self.field.dead_set.add(self)
 
-    def tick(self, dt):
+    def tick(self, dt):  # действия юнита за время dt
         if not self.attacking:
             self.attacking = self.field.attack_check(self)
             if self.attacking:
@@ -114,7 +114,7 @@ class Unit(pygame.sprite.Sprite):
             self.phase = 1 - self.phase
         self.act(dt)
 
-    def picture(self):
+    def picture(self):  # юнит возвращает изображение для отрисовки себя
         return f'{self.images}/animation{int(self.attacking)}{self.phase}.png'
 
     def act(self, dt):
@@ -136,7 +136,7 @@ class Unit(pygame.sprite.Sprite):
         return f'Unit({self.team}, {self.health})'
 
 
-class Tower(Unit):
+class Tower(Unit):  # класс башни (подкласс юнита)
     def __init__(self, team, health, images, field):
         super().__init__(team, 0, 0, 0, health, images, 0, field, False)
         self.alive = False
