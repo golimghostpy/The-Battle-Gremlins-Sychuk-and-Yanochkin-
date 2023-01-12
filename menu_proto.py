@@ -169,7 +169,6 @@ class Display:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.paused = not self.paused
-        #  drawing units
         if self.paused:
             self.draw_pause()
             self.clock.tick()
@@ -183,8 +182,9 @@ class Display:
                     self.paused = False
                     self.condition = LEVELS
         else:
+            # drawing units
             #
-            #  freaking ton of player actions
+            # freaking ton of player actions
             #
             self.field.main_cycle(self.clock.tick())
             if self.field.winner():
