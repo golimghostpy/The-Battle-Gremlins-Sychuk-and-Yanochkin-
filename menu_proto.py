@@ -98,7 +98,7 @@ class Display:
         Gremlin_Tower_unit.put(150)
         self.sprites.add(Gremlin_Tower_unit.sprite)
         Human_Tower_unit = Tower(-1, 1500, 'Human_Tower', self.field)
-        Human_Tower_unit.put(750)
+        Human_Tower_unit.put(640)
         self.sprites.add(Human_Tower_unit.sprite)
 
     def finish_LEVEL(self):
@@ -195,7 +195,7 @@ class Display:
                         unit = display_level[team]
                         unit.sprite.image = load_image(unit.picture())
                         unit.sprite.rect = unit.sprite.image.get_rect()
-                        unit.sprite.rect.x = unit.position - unit.sprite.image.get_width()
+                        unit.sprite.rect.x = unit.position - (1 + team) // 2 * unit.sprite.image.get_width()
                         unit.sprite.rect.y = HEIGHT - unit.sprite.image.get_height()
             self.sprites.draw(self.screen)
             self.field.main_cycle(self.clock.tick())
