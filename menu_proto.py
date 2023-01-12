@@ -24,6 +24,7 @@ class Display:
         self.field = None
         self.clock = pygame.time.Clock()
         self.paused = False
+        self.sprites = pygame.sprite.Group()
 
     def build(self):
         pygame.init()
@@ -35,11 +36,11 @@ class Display:
     #  pygame.display.flip()
 
     def draw_MAIN(self):
-        self.screen.blit(self.load_image('menu_background.png', None), (0, 0))
-        self.screen.blit(self.load_image('MAIN/title.png'), (self.width // 2 - 247, self.height // 5))
-        self.screen.blit(self.load_image('MAIN/start_button.png'), (self.width // 2 - 118, self.height // 5 * 2))
-        self.screen.blit(self.load_image('MAIN/gremlins_menu.png'), (self.width // 2 - 86, self.height // 5 * 3))
-        self.screen.blit(self.load_image('MAIN/quit.png'), (self.width // 2 - 45, self.height // 5 * 4))
+        self.screen.blit(load_image('menu_background.png', None), (0, 0))
+        self.screen.blit(load_image('MAIN/title.png'), (self.width // 2 - 247, self.height // 5))
+        self.screen.blit(load_image('MAIN/start_button.png'), (self.width // 2 - 118, self.height // 5 * 2))
+        self.screen.blit(load_image('MAIN/gremlins_menu.png'), (self.width // 2 - 86, self.height // 5 * 3))
+        self.screen.blit(load_image('MAIN/quit.png'), (self.width // 2 - 45, self.height // 5 * 4))
 
     def move_from_MAIN_to_LEVELS(self, event):
         x, y = event.pos
@@ -83,20 +84,20 @@ class Display:
                 return
 
     def draw_LEVELS(self):
-        self.screen.blit(self.load_image('menu_background.png', None), (0, 0))
-        self.screen.blit(self.load_image('LEVELS/levels_txt.png'), (self.width // 2 - 100, 20))
-        self.screen.blit(self.load_image('LEVELS/level_1.png'), (self.width // 5 - 110, self.height // 4))
-        self.screen.blit(self.load_image('LEVELS/level_2.png'), (self.width // 5 * 2 - 110, self.height // 4))
-        self.screen.blit(self.load_image('LEVELS/level_3.png'), (self.width // 5 * 3 - 110, self.height // 4))
-        self.screen.blit(self.load_image('LEVELS/level_4.png'), (self.width // 5 * 4 - 110, self.height // 4))
-        self.screen.blit(self.load_image('LEVELS/level_5.png'), (self.width - 110, self.height // 4))
-        self.screen.blit(self.load_image('back_btn.png'), (self.width // 2 - 83, 330))
+        self.screen.blit(load_image('menu_background.png', None), (0, 0))
+        self.screen.blit(load_image('LEVELS/levels_txt.png'), (self.width // 2 - 100, 20))
+        self.screen.blit(load_image('LEVELS/level_1.png'), (self.width // 5 - 110, self.height // 4))
+        self.screen.blit(load_image('LEVELS/level_2.png'), (self.width // 5 * 2 - 110, self.height // 4))
+        self.screen.blit(load_image('LEVELS/level_3.png'), (self.width // 5 * 3 - 110, self.height // 4))
+        self.screen.blit(load_image('LEVELS/level_4.png'), (self.width // 5 * 4 - 110, self.height // 4))
+        self.screen.blit(load_image('LEVELS/level_5.png'), (self.width - 110, self.height // 4))
+        self.screen.blit(load_image('back_btn.png'), (self.width // 2 - 83, 330))
 
     def starting_LEVEL(self):
         self.clock.tick()
         self.field = Field(SCHEDULES[self.condition])
-        Tower(1, 1500, '', self.field).put(0)
-        Tower(-1, 1500, '', self.field).put(0)
+        Tower(1, 1500, 'Gremlin_Tower', self.field).put(0)
+        Tower(-1, 1500, 'Human_Tower', self.field).put(0)
 
     def finish_LEVEL(self):
         self.field = None
@@ -115,8 +116,8 @@ class Display:
                 return
 
     def draw_UNITS(self):
-        self.screen.blit(self.load_image('menu_background.png', None), (0, 0))
-        self.screen.blit(self.load_image('back_btn.png'), (self.width // 2 - 83, 330))
+        self.screen.blit(load_image('menu_background.png', None), (0, 0))
+        self.screen.blit(load_image('back_btn.png'), (self.width // 2 - 83, 330))
 
     def position_UNITS(self, event):
         self.draw_UNITS()
@@ -161,7 +162,7 @@ class Display:
         return False
 
     def draw_LEVEL(self):
-        self.screen.blit(self.load_image(f'LEVEL_{self.condition - 3}/background_{self.condition - 3}.png', None),
+        self.screen.blit(load_image(f'LEVEL_{self.condition - 3}/background_{self.condition - 3}.png', None),
                          (0, 0))
 
     def position_LEVEL(self, event):
@@ -186,6 +187,15 @@ class Display:
             #
             # freaking ton of player actions
             #
+            for display_level in self.field.display_levels:
+                for team in [-1, 1]:
+                    if display_level[team]:
+                        unit = display_level[team]
+                        unit.sprite.image = load_image(unit.picture())
+                        unit.sprite.rect = unit.sprite.image.get_rect()
+                        unit.sprite.x = 5
+                        unit.sprite.y = 20
+
             self.field.main_cycle(self.clock.tick())
             if self.field.winner():
                 self.condition = END_SCREEN
@@ -220,20 +230,21 @@ class Display:
             pygame.display.flip()
         pygame.quit()
 
-    def load_image(self, name, colorkey=-1):
-        fullname = os.path.join('data', name)
-        if not os.path.isfile(fullname):
-            print(f"Файл с изображением '{fullname}' не найден")
-            sys.exit()
-        image = pygame.image.load(fullname)
-        if colorkey is not None:
-            image = image.convert()
-            if colorkey == -1:
-                colorkey = image.get_at((0, 0))
-            image.set_colorkey(colorkey)
-        else:
-            image = image.convert_alpha()
-        return image
+
+def load_image(name, colorkey=-1):
+    fullname = os.path.join('data', name)
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
 
 
 def main():

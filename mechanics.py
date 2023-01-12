@@ -115,7 +115,7 @@ class Unit:  # класс боевого юнита
         self.act(dt)
 
     def picture(self):  # юнит возвращает изображение для отрисовки себя
-        return f'{self.images}/animation{int(self.attacking)}{self.phase}.png'
+        return f'Sprites\\{self.images}\\animation{int(self.attacking)}{self.phase}.png'
 
     def act(self, dt):
         if self.attacking:
@@ -154,7 +154,7 @@ class Tower(Unit):  # класс башни (подкласс юнита)
         pass
 
     def picture(self):
-        return f'{self.images}/animation{int(self.alive)}'
+        return f'Sprites\\{self.images}\\animation{int(self.alive)}.png'
 
 
 if __name__ == '__main__':
