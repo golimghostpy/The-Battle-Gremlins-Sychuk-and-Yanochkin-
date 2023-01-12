@@ -12,7 +12,7 @@ SCHEDULES = {
     LEVEL_4: [],
     LEVEL_5: []
 }
-
+HEIGHT = 325
 
 class Display:
     def __init__(self):
@@ -32,8 +32,6 @@ class Display:
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.screen.fill((0, 0, 0))
         self.main_cycle()
-
-    #  pygame.display.flip()
 
     def draw_MAIN(self):
         self.screen.blit(load_image('menu_background.png', None), (0, 0))
@@ -96,8 +94,12 @@ class Display:
     def starting_LEVEL(self):
         self.clock.tick()
         self.field = Field(SCHEDULES[self.condition])
-        Tower(1, 1500, 'Gremlin_Tower', self.field).put(0)
-        Tower(-1, 1500, 'Human_Tower', self.field).put(0)
+        Gremlin_Tower_unit = Tower(1, 1500, 'Gremlin_Tower', self.field)
+        Gremlin_Tower_unit.put(150)
+        self.sprites.add(Gremlin_Tower_unit.sprite)
+        Human_Tower_unit = Tower(-1, 1500, 'Human_Tower', self.field)
+        Human_Tower_unit.put(750)
+        self.sprites.add(Human_Tower_unit.sprite)
 
     def finish_LEVEL(self):
         self.field = None
@@ -193,9 +195,9 @@ class Display:
                         unit = display_level[team]
                         unit.sprite.image = load_image(unit.picture())
                         unit.sprite.rect = unit.sprite.image.get_rect()
-                        unit.sprite.x = 5
-                        unit.sprite.y = 20
-
+                        unit.sprite.rect.x = unit.position - unit.sprite.image.get_width()
+                        unit.sprite.rect.y = HEIGHT - unit.sprite.image.get_height()
+            self.sprites.draw(self.screen)
             self.field.main_cycle(self.clock.tick())
             if self.field.winner():
                 self.condition = END_SCREEN

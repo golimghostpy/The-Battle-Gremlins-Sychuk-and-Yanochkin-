@@ -96,6 +96,7 @@ class Unit:  # класс боевого юнита
     def disappear(self):  # "уборка трупа"
         self.field.units[self.team].remove(self)
         self.field.display_levels[self.display_level][self.team] = None
+        self.sprite.kill()
 
     def take_damage(self, damage):  # получение урона юнитом
         self.health -= damage
