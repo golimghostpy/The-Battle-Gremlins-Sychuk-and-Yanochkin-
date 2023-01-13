@@ -20,12 +20,13 @@ START = 20
 
 
 class Field:  # класс поля, контролирующего взаимодействие юнитов
-    def __init__(self, schedule):
-        self.units = {1: set(), -1: set()}  # хранилище всех живых юнитов на поле
+    def __init__(self, schedule, sprites):
+        self.units = {1: set(), 0: set(), -1: set()}  # хранилище всех живых юнитов на поле
         self.schedule = schedule  # расписание выхода противников на уровне
         self.dead_set = set()  # множество убитых за итерацию юнитов
         self.towers = {1: None, -1: None}  # указатели на башни игрока и противника
-        self.display_levels = [{1: None, -1: None} for _ in range(50)]  # уровни отрисовки
+        self.sprites = sprites
+        self.display_levels = [{1: None, 0: None, -1: None} for _ in range(50)]  # уровни отрисовки
 
     def winner(self):  # выводит победителя (игрок / противник / никто)
         if self.towers[1].alive and self.towers[-1].alive:
@@ -35,7 +36,7 @@ class Field:  # класс поля, контролирующего взаимо
         return -1
 
     def main_cycle(self, dt):
-        for team in [1, -1]:
+        for team in [1, 0, -1]:
             for unit in self.units[team]:
                 unit.tick(dt)
         for unit in self.dead_set:
@@ -85,18 +86,20 @@ class Unit:  # класс боевого юнита
     def put(self, position):  # постановка юнита на поле боя
         self.field.units[self.team].add(self)
         self.position = position
+        self.field.sprites.add(self.sprite)
         for i in range(len(self.field.display_levels)):
             if not self.field.display_levels[i][self.team]:
                 self.display_level = i
                 self.field.display_levels[i][self.team] = self
                 return
-        self.field.display_levels.append({1: None, -1: None})
+        self.field.display_levels.append({1: None, 0: None, -1: None})
         self.field.display_levels[-1][self.team] = self
 
     def disappear(self):  # "уборка трупа"
         self.field.units[self.team].remove(self)
         self.field.display_levels[self.display_level][self.team] = None
         self.sprite.kill()
+        Ghost(self).summon()
 
     def take_damage(self, damage):  # получение урона юнитом
         self.health -= damage
@@ -148,7 +151,6 @@ class Tower(Unit):  # класс башни (подкласс юнита)
         self.alive = True
 
     def disappear(self):
-        super().disappear()
         self.alive = False
 
     def tick(self, dt):
@@ -156,6 +158,32 @@ class Tower(Unit):  # класс башни (подкласс юнита)
 
     def picture(self):
         return f'Sprites\\{self.images}\\animation{int(self.alive)}.png'
+
+
+class Ghost(Unit):  # класс призрака (используется для анимации смерти юнитов, невидим для живых юнитов)
+    def __init__(self, unit):
+        super().__init__(0, 0.1, 0, 0, 0, 'Ghost', 0, unit.field, False)
+        self.height = 0
+        self.body = unit
+        self.existence_limit = 1000
+
+    def summon(self):
+        super().put(self.body.position)
+        self.team = self.body.team
+
+    def tick(self, dt):
+        self.phase_timer += dt
+        self.height += dt * self.speed
+        if self.phase_timer >= self.existence_limit:
+            self.field.dead_set.add(self)
+
+    def disappear(self):
+        self.field.units[0].remove(self)
+        self.field.display_levels[self.display_level][0] = None
+        self.sprite.kill()
+
+    def picture(self):
+        return 'Sprites\\Ghost\\animation.png'
 
 
 if __name__ == '__main__':

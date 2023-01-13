@@ -1,6 +1,7 @@
 import pygame
 import os
 import sys
+from math import sin
 from mechanics import *
 
 #  conditions
@@ -39,10 +40,10 @@ class Display:
 
     def draw_MAIN(self):
         self.screen.blit(load_image('menu_background.png', None), (0, 0))
-        self.screen.blit(load_image('MAIN/title.png'), (self.width // 2 - 247, self.height // 5))
-        self.screen.blit(load_image('MAIN/start_button.png'), (self.width // 2 - 118, self.height // 5 * 2))
-        self.screen.blit(load_image('MAIN/gremlins_menu.png'), (self.width // 2 - 86, self.height // 5 * 3))
-        self.screen.blit(load_image('MAIN/quit.png'), (self.width // 2 - 45, self.height // 5 * 4))
+        self.screen.blit(load_image('MAIN\\title.png'), (self.width // 2 - 247, self.height // 5))
+        self.screen.blit(load_image('MAIN\\start_button.png'), (self.width // 2 - 118, self.height // 5 * 2))
+        self.screen.blit(load_image('MAIN\\gremlins_menu.png'), (self.width // 2 - 86, self.height // 5 * 3))
+        self.screen.blit(load_image('MAIN\\quit.png'), (self.width // 2 - 45, self.height // 5 * 4))
 
     def move_from_MAIN_to_LEVELS(self, event):
         x, y = event.pos
@@ -77,7 +78,6 @@ class Display:
     def position_MAIN(self, event):
         self.draw_MAIN()
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            x, y = event.pos
             if self.move_from_MAIN_to_LEVELS(event):
                 return
             elif self.move_from_MAIN_to_UNITS(event):
@@ -87,24 +87,22 @@ class Display:
 
     def draw_LEVELS(self):
         self.screen.blit(load_image('menu_background.png', None), (0, 0))
-        self.screen.blit(load_image('LEVELS/levels_txt.png'), (self.width // 2 - 100, 20))
-        self.screen.blit(load_image('LEVELS/level_1.png'), (self.width // 5 - 110, self.height // 4))
-        self.screen.blit(load_image('LEVELS/level_2.png'), (self.width // 5 * 2 - 110, self.height // 4))
-        self.screen.blit(load_image('LEVELS/level_3.png'), (self.width // 5 * 3 - 110, self.height // 4))
-        self.screen.blit(load_image('LEVELS/level_4.png'), (self.width // 5 * 4 - 110, self.height // 4))
-        self.screen.blit(load_image('LEVELS/level_5.png'), (self.width - 110, self.height // 4))
+        self.screen.blit(load_image('LEVELS\\levels_txt.png'), (self.width // 2 - 100, 20))
+        self.screen.blit(load_image('LEVELS\\level_1.png'), (self.width // 5 - 110, self.height // 4))
+        self.screen.blit(load_image('LEVELS\\level_2.png'), (self.width // 5 * 2 - 110, self.height // 4))
+        self.screen.blit(load_image('LEVELS\\level_3.png'), (self.width // 5 * 3 - 110, self.height // 4))
+        self.screen.blit(load_image('LEVELS\\level_4.png'), (self.width // 5 * 4 - 110, self.height // 4))
+        self.screen.blit(load_image('LEVELS\\level_5.png'), (self.width - 110, self.height // 4))
         self.screen.blit(load_image('back_btn.png'), (self.width // 2 - 83, 330))
 
     def starting_LEVEL(self):
         self.winner_team = None
         self.clock.tick()
-        self.field = Field(SCHEDULES[self.condition])
+        self.field = Field(SCHEDULES[self.condition], self.sprites)
         Gremlin_Tower_unit = Tower(1, 1500, 'Gremlin_Tower', self.field)
         Gremlin_Tower_unit.put(150)
-        self.sprites.add(Gremlin_Tower_unit.sprite)
         Human_Tower_unit = Tower(-1, 1500, 'Human_Tower', self.field)
         Human_Tower_unit.put(640)
-        self.sprites.add(Human_Tower_unit.sprite)
 
     def finish_LEVEL(self):
         self.field = None
@@ -169,8 +167,7 @@ class Display:
         return False
 
     def draw_LEVEL(self):
-        self.screen.blit(load_image(f'LEVEL_{self.condition - 3}/background_{self.condition - 3}.png', None),
-                         (0, 0))
+        self.screen.blit(load_image(f'LEVEL_{self.condition - 3}\\background_{self.condition - 3}.png', None), (0, 0))
 
     def position_LEVEL(self, event):
         self.draw_LEVEL()
@@ -190,18 +187,20 @@ class Display:
                     self.paused = False
                     self.condition = LEVELS
         else:
-            # drawing units
             #
             # freaking ton of player actions
             #
             for display_level in self.field.display_levels:
-                for team in [-1, 1]:
+                for team in [-1, 0, 1]:
                     if display_level[team]:
                         unit = display_level[team]
                         unit.sprite.image = load_image(unit.picture())
                         unit.sprite.rect = unit.sprite.image.get_rect()
-                        unit.sprite.rect.x = unit.position - (1 + team) // 2 * unit.sprite.image.get_width()
+                        unit.sprite.rect.x = unit.position - (1 + unit.team) // 2 * unit.sprite.image.get_width()
                         unit.sprite.rect.y = HEIGHT - unit.sprite.image.get_height()
+                        if team == 0:
+                            unit.sprite.rect.y -= unit.height
+                            unit.sprite.rect.x += 20 * sin(unit.phase_timer)
             self.sprites.draw(self.screen)
             self.field.main_cycle(self.clock.tick())
             if self.field.winner():
