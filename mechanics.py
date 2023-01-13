@@ -81,7 +81,7 @@ class Unit:  # класс боевого юнита
         self.display_level = None  # для отрисовки юнитов поверх друг друга
         self.phase = 0  # фаза (для анимаций)
         self.phase_timer = 0  # таймеры смены фаз
-        self.animation_periods = {False: {0: 0.5, 1: 0.5}, True: {0: 0.75 * self.haste, 1: 0.25 * self.haste}}
+        self.animation_periods = {False: {0: 1000, 1: 1000}, True: {0: 0.75 * self.haste, 1: 0.25 * self.haste}}
 
     def put(self, position):  # постановка юнита на поле боя
         self.field.units[self.team].add(self)
@@ -165,7 +165,7 @@ class Ghost(Unit):  # класс призрака (используется дл
         super().__init__(0, 0.1, 0, 0, 0, 'Ghost', 0, unit.field, False)
         self.height = 0
         self.body = unit
-        self.existence_limit = 1000
+        self.existence_limit = 2000
 
     def summon(self):
         super().put(self.body.position)
