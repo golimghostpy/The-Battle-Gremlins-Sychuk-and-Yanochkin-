@@ -215,10 +215,10 @@ class Display:
         pygame.draw.rect(self.screen, pygame.Color('black'), (50, 320, 70, 20))
         pygame.draw.rect(self.screen, pygame.Color('black'), (self.width - 85, 320, 70, 20))
         font = pygame.font.Font(None, 20)
-        hp = font.render(f'{self.field.towers[1].health}/1500', True, 'white')
+        hp = font.render(f'{max(0, self.field.towers[1].health)}/1500', True, 'white')
         self.screen.blit(hp, (85 - hp.get_width() // 2, 330 - hp.get_height() // 2))
         font = pygame.font.Font(None, 20)
-        hp = font.render(f'{self.field.towers[-1].health}/{1500 * self.active_level}', True, 'white')
+        hp = font.render(f'{max(0, self.field.towers[-1].health)}/{1500 * self.active_level}', True, 'white')
         self.screen.blit(hp, (self.width - 50 - hp.get_width() // 2, 330 - hp.get_height() // 2))
 
 
