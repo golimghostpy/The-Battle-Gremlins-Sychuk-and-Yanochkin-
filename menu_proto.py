@@ -154,6 +154,8 @@ class Display:
         font = pygame.font.Font(None, 36)
         self.cont = font.render('Continue', True, 'black')
         self.screen.blit(self.cont, (self.width // 2 - self.cont.get_width() // 2, self.height // 2 - 40))
+        self.restart = font.render('Restart', True, 'black')
+        self.screen.blit(self.restart, (self.width // 2 - self.restart.get_width() // 2, self.height // 2 + 20))
         self.esc = font.render('Escape', True, 'black')
         self.screen.blit(self.esc, (self.width // 2 - self.esc.get_width() // 2, self.height // 2 + 80))
 
@@ -201,6 +203,7 @@ class Display:
             self.draw_pause()
             self.clock.tick()
         else:
+            self.render_summon_buttons()
             for display_level in self.field.display_levels:
                 for team in [-1, 0, 1]:
                     if display_level[team]:
@@ -232,11 +235,16 @@ class Display:
                         and self.height // 2 + 80 <= y <= self.height // 2 + 80 + self.esc.get_height():
                     self.paused = False
                     self.condition = LEVELS
+                elif self.width // 2 - self.restart.get_width() // 2 <= x <= self.width // 2 + self.restart.get_width() // 2 \
+                        and self.height // 2 + 20 <= y <= self.height // 2 + 20 + self.restart.get_height():
+                    self.paused = False
+                    self.starting_LEVEL()
         else:
-            pass
-            #
-            # freaking ton of player actions
-            #
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                x, y = event.pos
+                if 194 <= x <= 560 and 367 <= y <= 428:
+                    unit_number = (x - 200) // 59
+                    print(unit_number)
 
     def passive_END_SCREEN(self):
         self.passive_LEVEL()
@@ -261,6 +269,11 @@ class Display:
 
     def active_BOSS_DIALOG(self, event):
         pass
+
+    def render_summon_buttons(self):
+        for i in range(6):
+            pygame.draw.rect(self.screen, pygame.Color('black'), (200 + 59 * i, 367, 61, 61), 2)
+            self.screen.blit(load_image(f'Avas\\ava{i}.png', None), (201 + 59 * i, 368))
 
     def main_cycle(self):
         self.running = True
