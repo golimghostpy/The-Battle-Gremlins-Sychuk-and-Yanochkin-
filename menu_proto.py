@@ -1,7 +1,7 @@
 import pygame
 import os
 import sys
-from math import sin
+from math import sin, inf
 from mechanics import *
 
 #  conditions
@@ -29,6 +29,8 @@ class Display:
         self.timers = [2000, 3000, 5000, 6000, 7000, 13000]
         self.balance = 0
         self.money_coefficient = 0.1
+        self.cheat_code = [False] * 4
+
 
     def build(self):
         pygame.init()
@@ -87,14 +89,14 @@ class Display:
     def starting_LEVEL(self):
         self.sprites = pygame.sprite.Group()
         self.winner_team = None
+        self.cheat_code = [False] * 4
         self.clock.tick()
+        self.balance = 0
+        self.money_coefficient = 0.1
         self.timers = [2000, 3000, 5000, 6000, 7000, 13000]
         self.field = Field(f'data\\LEVEL_{self.condition}\\schedule.txt', self.sprites)
         Tower(1, 1500, 'Gremlin_Tower', self.field).put(150)
         Tower(-1, 1500 * self.condition, 'Human_Tower', self.field).put(640)
-
-    def finish_LEVEL(self):
-        self.field = None
 
     def draw_UNITS(self):
         self.screen.blit(load_image('menu_background.png', None), (0, 0))
@@ -224,6 +226,14 @@ class Display:
                         unit.sprite.rect.y -= unit.height
                         unit.sprite.rect.x += 10 * sin(0.01 * unit.timer)
         self.sprites.draw(self.screen)
+        if all(self.cheat_code):
+            self.money_coefficient = 10
+            self.timers = [2000, 3000, 5000, 6000, 7000, 13000]
+            for unit in self.field.units[1]:
+                unit.speed = 0.5
+                unit.damage = inf
+                unit.health = inf
+                unit.haste = 0
         if self.paused:
             self.draw_pause()
             self.clock.tick()
@@ -241,6 +251,14 @@ class Display:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.paused = not self.paused
+            if event.key == pygame.K_f:
+                self.cheat_code[0] = True
+            if event.key == pygame.K_u and all(self.cheat_code[:1]):
+                self.cheat_code[1] = True
+            if event.key == pygame.K_c and all(self.cheat_code[:2]):
+                self.cheat_code[2] = True
+            if event.key == pygame.K_k and all(self.cheat_code[:3]):
+                self.cheat_code[3] = True
         if self.paused:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 x, y = event.pos
@@ -251,8 +269,9 @@ class Display:
                         and self.height // 2 + 80 <= y <= self.height // 2 + 80 + self.esc.get_height():
                     self.paused = False
                     self.condition = LEVELS
-                elif self.width // 2 - self.restart.get_width() // 2 <= x <= self.width // 2 + self.restart.get_width() // 2 \
-                        and self.height // 2 + 20 <= y <= self.height // 2 + 20 + self.restart.get_height():
+                elif self.width // 2 - self.restart.get_width() // 2 <= x <= self.width // 2 + \
+                        self.restart.get_width() // 2 and self.height // 2 + \
+                        20 <= y <= self.height // 2 + 20 + self.restart.get_height():
                     self.paused = False
                     self.starting_LEVEL()
         else:
@@ -305,8 +324,9 @@ class Display:
         for i in range(6):
             pygame.draw.rect(self.screen, pygame.Color('black'), (200 + 59 * i, 356, 61, 61), 2)
             self.screen.blit(load_image(f'Avas\\ava{i}.png', None), (201 + 59 * i, 357))
-            pygame.draw.rect(self.screen, pygame.Color('black'), (200 + 59 * i, 356 + (61 - 61 * (limits[i] - \
-                            self.timers[i]) // limits[i]), 61, 356 + 61 * (limits[i] - self.timers[i]) // limits[i]))
+            pygame.draw.rect(self.screen, pygame.Color('black'),
+                             (200 + 59 * i, 356 + (61 - 61 * (limits[i] - self.timers[i]) // limits[i]),
+                              61, 356 + 61 * (limits[i] - self.timers[i]) // limits[i]))
             font = pygame.font.Font(None, 18)
             cost = font.render(f'{costs[i]}', True, 'white')
             self.screen.blit(cost, (200 + 59 * (i + 1) - 28 - cost.get_width() // 2, 418))
