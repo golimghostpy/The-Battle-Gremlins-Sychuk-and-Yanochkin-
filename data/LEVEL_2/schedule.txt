@@ -1,3 +1,0 @@
-0 -1 15 60 Basic_Gremlin 0 0
-0 1 10 500 Wall_Gremlin 0 0
-1000 1 80 100 Axe_Gremlin 0 1

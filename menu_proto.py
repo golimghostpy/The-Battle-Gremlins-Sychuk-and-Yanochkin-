@@ -9,7 +9,8 @@ LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5, MAIN, LEVELS, UNITS, END_SCREEN = 1
 BOSS_DIALOG = 10
 #  ----------
 HEIGHT = 325
-
+limits = [2000, 3000, 5000, 6000, 7000, 13000]
+costs = [75, 150, 300, 600, 800, 1500]
 
 class Display:
     def __init__(self):
@@ -24,6 +25,9 @@ class Display:
         self.sprites = pygame.sprite.Group()
         self.active_level = None
         self.winner_team = None
+        self.timers = [2000, 3000, 5000, 6000, 7000, 13000]
+        self.balance = 0
+        self.money_coefficient = 0.1
 
     def build(self):
         pygame.init()
@@ -83,9 +87,10 @@ class Display:
         self.sprites = pygame.sprite.Group()
         self.winner_team = None
         self.clock.tick()
+        self.timers = [2000, 3000, 5000, 6000, 7000, 13000]
         self.field = Field(f'data\\LEVEL_{self.condition}\\schedule.txt', self.sprites)
         Tower(1, 1500, 'Gremlin_Tower', self.field).put(150)
-        Tower(-1, 1500, 'Human_Tower', self.field).put(640)
+        Tower(-1, 1500 * self.condition, 'Human_Tower', self.field).put(640)
 
     def finish_LEVEL(self):
         self.field = None
@@ -199,24 +204,29 @@ class Display:
 
     def passive_LEVEL(self):
         self.draw_LEVEL()
+        self.render_summon_buttons()
+        for display_level in self.field.display_levels:
+            for team in [-1, 0, 1]:
+                if display_level[team]:
+                    unit = display_level[team]
+                    unit.sprite.image = load_image(unit.picture())
+                    unit.sprite.rect = unit.sprite.image.get_rect()
+                    unit.sprite.rect.x = unit.position + unit.team * unit.distance - (
+                                1 + unit.team) // 2 * unit.sprite.image.get_width()
+                    unit.sprite.rect.y = HEIGHT - unit.sprite.image.get_height()
+                    if team == 0:
+                        unit.sprite.rect.y -= unit.height
+                        unit.sprite.rect.x += 10 * sin(0.01 * unit.timer)
+        self.sprites.draw(self.screen)
         if self.paused:
             self.draw_pause()
             self.clock.tick()
         else:
-            self.render_summon_buttons()
-            for display_level in self.field.display_levels:
-                for team in [-1, 0, 1]:
-                    if display_level[team]:
-                        unit = display_level[team]
-                        unit.sprite.image = load_image(unit.picture())
-                        unit.sprite.rect = unit.sprite.image.get_rect()
-                        unit.sprite.rect.x = unit.position + unit.team * unit.distance - (1 + unit.team) // 2 * unit.sprite.image.get_width()
-                        unit.sprite.rect.y = HEIGHT - unit.sprite.image.get_height()
-                        if team == 0:
-                            unit.sprite.rect.y -= unit.height
-                            unit.sprite.rect.x += 10 * sin(0.01 * unit.timer)
-            self.sprites.draw(self.screen)
-            self.field.main_cycle(self.clock.tick())
+            dt = self.clock.tick()
+            self.field.main_cycle(dt)
+            self.balance += self.money_coefficient * dt
+            for timer in range(6):
+                self.timers[timer] += dt
             if self.field.winner():
                 self.winner_team = self.field.winner()
                 self.condition = END_SCREEN
@@ -244,7 +254,22 @@ class Display:
                 x, y = event.pos
                 if 194 <= x <= 560 and 367 <= y <= 428:
                     unit_number = (x - 200) // 59
-                    print(unit_number)
+                    if self.timers[unit_number] >= limits[unit_number] and self.balance >= costs[unit_number]:
+                        self.balance -= costs[unit_number]
+                        self.timers[unit_number] = 0
+                        if unit_number == 0:
+                            Unit(1, 15, 60, 'Basic_Gremlin', 0, self.field, False).put(bases[1])
+                        elif unit_number == 1:
+                            Unit(1, 10, 750, 'Wall_Gremlin', 0, self.field, False).put(bases[1])
+                        elif unit_number == 2:
+                            Unit(1, 80, 100, 'Axe_Gremlin', 0, self.field, True).put(bases[1])
+                        elif unit_number == 3:
+                            Unit(1, 130, 300, 'Sausage_Gremlin', 1000, self.field, True).put(bases[1])
+                        elif unit_number == 4:
+                            Unit(1, 200, 500, 'Spear_Gremlin', 1500, self.field, False).put(bases[1])
+                        elif unit_number == 5:
+                            Unit(1, 600, 250, 'Shaman_Gremlin', 2000, self.field, True).put(bases[1])
+
 
     def passive_END_SCREEN(self):
         self.passive_LEVEL()
