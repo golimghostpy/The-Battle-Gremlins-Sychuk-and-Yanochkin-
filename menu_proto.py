@@ -12,6 +12,7 @@ HEIGHT = 325
 limits = [2000, 3000, 5000, 6000, 7000, 13000]
 costs = [75, 150, 300, 600, 800, 1500]
 
+
 class Display:
     def __init__(self):
         self.condition = MAIN
@@ -203,7 +204,12 @@ class Display:
                 self.condition = MAIN
 
     def passive_LEVEL(self):
+        self.screen.fill('white')
         self.draw_LEVEL()
+        pygame.draw.rect(self.screen, pygame.Color('black'), (self.width - 100, 0, 100, 30))
+        font = pygame.font.Font(None, 30)
+        money = font.render(f'{int(self.balance)}', True, 'white')
+        self.screen.blit(money, (self.width - 50 - money.get_width() // 2, 15 - money.get_height() // 2))
         self.render_summon_buttons()
         for display_level in self.field.display_levels:
             for team in [-1, 0, 1]:
@@ -212,7 +218,7 @@ class Display:
                     unit.sprite.image = load_image(unit.picture())
                     unit.sprite.rect = unit.sprite.image.get_rect()
                     unit.sprite.rect.x = unit.position + unit.team * unit.distance - (
-                                1 + unit.team) // 2 * unit.sprite.image.get_width()
+                            1 + unit.team) // 2 * unit.sprite.image.get_width()
                     unit.sprite.rect.y = HEIGHT - unit.sprite.image.get_height()
                     if team == 0:
                         unit.sprite.rect.y -= unit.height
@@ -252,7 +258,7 @@ class Display:
         else:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 x, y = event.pos
-                if 194 <= x <= 560 and 367 <= y <= 428:
+                if 194 <= x <= 560 and 356 <= y <= 415:
                     unit_number = (x - 200) // 59
                     if self.timers[unit_number] >= limits[unit_number] and self.balance >= costs[unit_number]:
                         self.balance -= costs[unit_number]
@@ -269,7 +275,6 @@ class Display:
                             Unit(1, 200, 500, 'Spear_Gremlin', 1500, self.field, False).put(bases[1])
                         elif unit_number == 5:
                             Unit(1, 600, 250, 'Shaman_Gremlin', 2000, self.field, True).put(bases[1])
-
 
     def passive_END_SCREEN(self):
         self.passive_LEVEL()
@@ -296,9 +301,15 @@ class Display:
         pass
 
     def render_summon_buttons(self):
+        pygame.draw.rect(self.screen, pygame.Color('black'), (200, 417, 356, 20))
         for i in range(6):
-            pygame.draw.rect(self.screen, pygame.Color('black'), (200 + 59 * i, 367, 61, 61), 2)
-            self.screen.blit(load_image(f'Avas\\ava{i}.png', None), (201 + 59 * i, 368))
+            pygame.draw.rect(self.screen, pygame.Color('black'), (200 + 59 * i, 356, 61, 61), 2)
+            self.screen.blit(load_image(f'Avas\\ava{i}.png', None), (201 + 59 * i, 357))
+            pygame.draw.rect(self.screen, pygame.Color('black'), (200 + 59 * i, 356 + (61 - 61 * (limits[i] - \
+                            self.timers[i]) // limits[i]), 61, 356 + 61 * (limits[i] - self.timers[i]) // limits[i]))
+            font = pygame.font.Font(None, 18)
+            cost = font.render(f'{costs[i]}', True, 'white')
+            self.screen.blit(cost, (200 + 59 * (i + 1) - 28 - cost.get_width() // 2, 418))
 
     def main_cycle(self):
         self.running = True
