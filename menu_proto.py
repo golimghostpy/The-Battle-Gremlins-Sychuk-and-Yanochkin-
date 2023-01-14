@@ -8,13 +8,6 @@ from mechanics import *
 LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5, MAIN, LEVELS, UNITS, END_SCREEN = 1, 2, 3, 4, 5, 6, 7, 8, 9
 BOSS_DIALOG = 10
 #  ----------
-SCHEDULES = {
-    LEVEL_1: [],
-    LEVEL_2: [],
-    LEVEL_3: [],
-    LEVEL_4: [],
-    LEVEL_5: []
-}
 HEIGHT = 325
 
 
@@ -87,15 +80,12 @@ class Display:
         self.screen.blit(load_image('back_btn.png'), (self.width // 2 - 83, 330))
 
     def starting_LEVEL(self):
+        self.sprites = pygame.sprite.Group()
         self.winner_team = None
         self.clock.tick()
-        self.field = Field(SCHEDULES[self.condition], self.sprites)
-        Gremlin_Tower_unit = Tower(1, 1500, 'Gremlin_Tower', self.field)
-        Gremlin_Tower_unit.put(150)
-        Human_Tower_unit = Tower(-1, 1500, 'Human_Tower', self.field)
-        Human_Tower_unit.put(640)
-        Unit(1, 0.1, 10, 500, 100, 'Basic_Gremlin', 1000, self.field, False).put(150)
-        Unit(-1, 0.1, 10, 500, 100, 'Basic_Gremlin', 1500, self.field, False).put(550)
+        self.field = Field(f'data\\LEVEL_{self.condition}\\schedule.txt', self.sprites)
+        Tower(1, 1500, 'Gremlin_Tower', self.field).put(150)
+        Tower(-1, 1500, 'Human_Tower', self.field).put(640)
 
     def finish_LEVEL(self):
         self.field = None
@@ -259,6 +249,7 @@ class Display:
                     and self.height // 2 - 40 <= y <= self.height // 2 - 40 + self.next.get_height():
                 if 1 <= self.active_level <= 4:
                     self.condition = self.active_level + 1
+                    self.starting_LEVEL()
                 else:
                     self.condition = BOSS_DIALOG
             elif self.width // 2 - self.lvl_menu.get_width() // 2 <= x <= self.width // 2 + self.lvl_menu.get_width() \

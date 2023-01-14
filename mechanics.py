@@ -1,32 +1,22 @@
 import pygame
 
-UNITS = {
-    # команда, скорость, дальность, урон, здоровье, анимации, скорость атаки, поле, аое, цена, кд
-    1: (1, 0.01, 20, 5, 20, '', 2, None, False, 50, 3),
-    2: (1),
-    3: (1),
-    4: (1),
-    5: (1),
-    6: (1),
-    7: (-1),
-    8: (-1),
-    9: (-1),
-    10: (-1),
-    11: (-1),
-    12: (-1)
-}
+
 FIELD_LENGTH = 700
 START = 20
-
+bases = {-1: 640, 1: 150}
 
 class Field:  # класс поля, контролирующего взаимодействие юнитов
     def __init__(self, schedule, sprites):
         self.units = {1: set(), 0: set(), -1: set()}  # хранилище всех живых юнитов на поле
-        self.schedule = schedule  # расписание выхода противников на уровне
+        text = open(schedule, 'r')
+        self.schedule = text.readlines()  # расписание выхода противников на уровне
+        text.close()
         self.dead_set = set()  # множество убитых за итерацию юнитов
         self.towers = {1: None, -1: None}  # указатели на башни игрока и противника
         self.sprites = sprites
         self.display_levels = [{1: None, 0: None, -1: None} for _ in range(50)]  # уровни отрисовки
+        self.time = 0
+        self.schedule_row = 0
 
     def winner(self):  # выводит победителя (игрок / противник / никто)
         if self.towers[1].alive and self.towers[-1].alive:
@@ -35,7 +25,19 @@ class Field:  # класс поля, контролирующего взаимо
             return 1
         return -1
 
+    def put_unit_from_schedule(self):
+        stats = self.schedule[self.schedule_row].split()
+        team, speed, range, damage = int(stats[1]), float(stats[2]), int(stats[3]), int(stats[4])
+        health, images, haste, area = int(stats[5]), stats[6], int(stats[7]), bool(int(stats[8]))
+        Unit(team, speed, range, damage, health, images, haste, self, area).put(bases[team])
+
     def main_cycle(self, dt):
+        self.time += dt
+        # schedule
+        if self.schedule_row < len(self.schedule):
+            if self.time >= int(self.schedule[self.schedule_row].split()[0]):
+                self.put_unit_from_schedule()
+                self.schedule_row += 1
         for team in [1, 0, -1]:
             for unit in self.units[team]:
                 unit.tick(dt)
