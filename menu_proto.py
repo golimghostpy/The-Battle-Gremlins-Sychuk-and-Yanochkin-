@@ -248,6 +248,8 @@ class Display:
                 unit.damage = inf
                 unit.health = inf
                 unit.haste = 0
+                unit.attack_animations = [100, 100]
+                unit.moving_animation = 100
         if self.paused:
             self.draw_pause()
             self.clock.tick()
