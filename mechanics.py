@@ -1,16 +1,15 @@
 import pygame
 
 
-FIELD_LENGTH = 700
-START = 20
 bases = {-1: 640, 1: 150}
+walking, standing, attacking = 0, 1, 2
+
 
 class Field:  # класс поля, контролирующего взаимодействие юнитов
     def __init__(self, schedule, sprites):
         self.units = {1: set(), 0: set(), -1: set()}  # хранилище всех живых юнитов на поле
-        text = open(schedule, 'r')
-        self.schedule = text.readlines()  # расписание выхода противников на уровне
-        text.close()
+        with open(schedule, 'r') as text:
+            self.schedule = text.readlines()  # расписание выхода противников на уровне
         self.dead_set = set()  # множество убитых за итерацию юнитов
         self.towers = {1: None, -1: None}  # указатели на башни игрока и противника
         self.sprites = sprites
@@ -27,9 +26,9 @@ class Field:  # класс поля, контролирующего взаимо
 
     def put_unit_from_schedule(self):
         stats = self.schedule[self.schedule_row].split()
-        team, speed, range, damage = int(stats[1]), float(stats[2]), int(stats[3]), int(stats[4])
-        health, images, haste, area = int(stats[5]), stats[6], int(stats[7]), bool(int(stats[8]))
-        Unit(team, speed, range, damage, health, images, haste, self, area).put(bases[team])
+        team, damage, health = int(stats[1]), int(stats[2]), int(stats[3])
+        images, haste, area = stats[4], int(stats[5]), bool(int(stats[6]))
+        Unit(team, damage, health, images, haste, self, area).put(bases[team])
 
     def main_cycle(self, dt):
         self.time += dt
@@ -66,24 +65,22 @@ class Field:  # класс поля, контролирующего взаимо
 
 
 class Unit:  # класс боевого юнита
-    def __init__(self, team, speed, range, damage, health, images, haste, field, area):
+    def __init__(self, team, damage, health, images, haste, field, area):
         self.sprite = pygame.sprite.Sprite()  # используется для отрисовки
         self.images = images  # изображение юнита
-        self.team = team  # команда юнита (враг или союзник)
-        self.speed = speed  # скорость перемещения юнита
-        self.damage = damage  # урон юнита
-        self.range = range  # дальность атаки юнита
-        self.health = health  # здоровье юнита
-        self.haste = haste  # скорость атаки юнита
-        self.field = field  # поле, на котором сражается юнит
-        self.attacking = False  # находится ли юнит в процессе атаки
-        self.position = None  # расположение юнита
-        self.area = area  # бьёт юнит по зоне или по одиночной цели
-        self.attack_timer = 0  # для отслеживания задержки атаки
+        self.team, self.damage = team, damage  # команда юнита (враг или союзник), урон атак юнита
+        self.health, self.haste = health, haste  # здоровье юнита, скорость атаки юнита
+        self.field, self.condition = field, walking  # поле, на котором сражается юнит, состояние юнита
+        self.position, self.area = None, area  # расположение юнита, бьёт юнит по зоне или по одиночной цели
         self.display_level = None  # для отрисовки юнитов поверх друг друга
-        self.phase = 0  # фаза (для анимаций)
-        self.phase_timer = 0  # таймеры смены фаз
-        self.animation_periods = {False: {0: 1000, 1: 1000}, True: {0: 0.75 * self.haste, 1: 0.25 * self.haste}}
+        with open(f'data\\Sprites\\{images}\\stats.txt', 'r').readline().split() as text:
+            self.distance, self.speed, self.range = int(text[0]), float(text[1]), int(text[2])
+            self.attack_animations = [int(text[3]), int(text[4])]
+            self.moving_animation = int(text[5])
+            # скорость движения и дальность атаки юнита
+        self.timer = 0
+        self.phase = 0
+        self.phase_timer = 0
 
     def put(self, position):  # постановка юнита на поле боя
         self.field.units[self.team].add(self)
@@ -109,42 +106,51 @@ class Unit:  # класс боевого юнита
             self.field.dead_set.add(self)
 
     def tick(self, dt):  # действия юнита за время dt
-        if not self.attacking:
-            self.attacking = self.field.attack_check(self)
-            if self.attacking:
+        self.timer += dt
+        if self.field.attack_check(self):
+            if self.condition == attacking:
+                self.phase_timer += dt
+                if self.phase_timer >= self.attack_animations[self.phase]:
+                    self.phase = 1 - self.phase_timer
+                    self.phase_timer = 0
+            else:
                 self.phase = 0
                 self.phase_timer = 0
-        self.phase_timer += dt
-        if self.phase_timer >= self.animation_periods[self.attacking][self.phase]:
-            self.phase_timer = 0
-            self.phase = 1 - self.phase
+                if self.timer >= self.haste:
+                    self.condition = attacking
+                    self.timer = 0
+                else:
+                    self.condition = standing
+        else:
+            if self.condition == walking:
+                self.phase_timer += dt
+                if self.phase_timer >= self.moving_animation:
+                    self.phase = 1 - self.phase_timer
+                    self.phase_timer = 0
+            else:
+                self.condition = walking
+                self.phase = 0
+                self.phase_timer = 0
         self.act(dt)
 
     def picture(self):  # юнит возвращает изображение для отрисовки себя
-        return f'Sprites\\{self.images}\\animation{int(self.attacking)}{self.phase}.png'
+        return f'Sprites\\{self.images}\\animation{self.condition}{self.phase}.png'
 
     def act(self, dt):
-        if self.attacking:
-            self.attack_timer += dt
-            if self.attack_timer >= self.haste:
-                self.attack_timer = 0
+        if self.condition == walking:
+            self.position += self.team * self.speed * dt
+        elif self.condition == attacking:
+            if self.timer >= sum(self.attack_animations):
                 self.field.commit_attack(self)
-                self.attacking = False
+                self.timer = 0
                 self.phase = 0
                 self.phase_timer = 0
-        else:
-            self.position += self.team * self.speed * dt
-
-    def __str__(self):
-        return f'Team: {self.team}, HP: {self.health}, pos: {str(self.position)[:4]}, attacking: {self.attacking}'
-
-    def __repr__(self):
-        return f'Unit({self.team}, {self.health})'
+                self.condition = standing
 
 
 class Tower(Unit):  # класс башни (подкласс юнита)
     def __init__(self, team, health, images, field):
-        super().__init__(team, 0, 0, 0, health, images, 0, field, False)
+        super().__init__(team, 0, health, images, 0, field, False)
         self.alive = False
 
     def put(self, position):
@@ -164,19 +170,20 @@ class Tower(Unit):  # класс башни (подкласс юнита)
 
 class Ghost(Unit):  # класс призрака (используется для анимации смерти юнитов, невидим для живых юнитов)
     def __init__(self, unit):
-        super().__init__(0, 0.1, 0, 0, 0, 'Ghost', 0, unit.field, False)
+        super().__init__(0, 0, 0, 'Ghost', 0, unit.field, False)
         self.height = 0
         self.body = unit
         self.existence_limit = 2000
+        self.timer = 0
 
     def summon(self):
         super().put(self.body.position)
         self.team = self.body.team
 
     def tick(self, dt):
-        self.phase_timer += dt
+        self.timer += dt
         self.height += dt * self.speed
-        if self.phase_timer >= self.existence_limit:
+        if self.timer >= self.existence_limit:
             self.field.dead_set.add(self)
 
     def disappear(self):

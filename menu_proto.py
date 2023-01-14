@@ -207,7 +207,7 @@ class Display:
                         unit = display_level[team]
                         unit.sprite.image = load_image(unit.picture())
                         unit.sprite.rect = unit.sprite.image.get_rect()
-                        unit.sprite.rect.x = unit.position + unit.team * unit.range - (1 + unit.team) // 2 * unit.sprite.image.get_width()
+                        unit.sprite.rect.x = unit.position + unit.team * unit.distance - (1 + unit.team) // 2 * unit.sprite.image.get_width()
                         unit.sprite.rect.y = HEIGHT - unit.sprite.image.get_height()
                         if team == 0:
                             unit.sprite.rect.y -= unit.height
