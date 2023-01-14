@@ -211,7 +211,7 @@ class Display:
                         unit.sprite.rect.y = HEIGHT - unit.sprite.image.get_height()
                         if team == 0:
                             unit.sprite.rect.y -= unit.height
-                            unit.sprite.rect.x += 10 * sin(0.01 * unit.phase_timer)
+                            unit.sprite.rect.x += 10 * sin(0.01 * unit.timer)
             self.sprites.draw(self.screen)
             self.field.main_cycle(self.clock.tick())
             if self.field.winner():

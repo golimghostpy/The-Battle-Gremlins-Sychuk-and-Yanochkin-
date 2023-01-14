@@ -43,6 +43,15 @@ class Field:  # класс поля, контролирующего взаимо
         for unit in self.dead_set:
             unit.disappear()
         self.dead_set.clear()
+        for team in [-1, 1]:
+            for unit in self.units[team]:
+                if unit.condition == standing:
+                    if self.attack_check(unit):
+                        unit.condition = attacking
+                        if unit.haste:
+                            unit.condition = standing
+                    else:
+                        unit.condition = walking
 
     def attack_check(self, unit):  # проверка на то, может ли атаковать юнит
         for enemy in self.units[-unit.team]:
@@ -73,12 +82,13 @@ class Unit:  # класс боевого юнита
         self.field, self.condition = field, walking  # поле, на котором сражается юнит, состояние юнита
         self.position, self.area = None, area  # расположение юнита, бьёт юнит по зоне или по одиночной цели
         self.display_level = None  # для отрисовки юнитов поверх друг друга
-        with open(f'data\\Sprites\\{images}\\stats.txt', 'r').readline().split() as text:
+        with open(f'data\\Sprites\\{images}\\stats.txt', 'r') as stats:
+            text = stats.readline().split()
             self.distance, self.speed, self.range = int(text[0]), float(text[1]), int(text[2])
             self.attack_animations = [int(text[3]), int(text[4])]
             self.moving_animation = int(text[5])
             # скорость движения и дальность атаки юнита
-        self.timer = 0
+        self.timer = self.haste
         self.phase = 0
         self.phase_timer = 0
 
@@ -111,7 +121,7 @@ class Unit:  # класс боевого юнита
             if self.condition == attacking:
                 self.phase_timer += dt
                 if self.phase_timer >= self.attack_animations[self.phase]:
-                    self.phase = 1 - self.phase_timer
+                    self.phase = 1 - self.phase
                     self.phase_timer = 0
             else:
                 self.phase = 0
@@ -125,7 +135,7 @@ class Unit:  # класс боевого юнита
             if self.condition == walking:
                 self.phase_timer += dt
                 if self.phase_timer >= self.moving_animation:
-                    self.phase = 1 - self.phase_timer
+                    self.phase = 1 - self.phase
                     self.phase_timer = 0
             else:
                 self.condition = walking
