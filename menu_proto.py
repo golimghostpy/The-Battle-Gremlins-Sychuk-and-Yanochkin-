@@ -205,13 +205,27 @@ class Display:
                                  (self.width // 2 - 83, 330, 166, 80), 2)
                 self.condition = MAIN
 
-    def passive_LEVEL(self):
-        self.screen.fill('white')
-        self.draw_LEVEL()
+    def draw_money(self):
         pygame.draw.rect(self.screen, pygame.Color('black'), (self.width - 100, 0, 100, 30))
         font = pygame.font.Font(None, 30)
         money = font.render(f'{int(self.balance)}', True, 'white')
         self.screen.blit(money, (self.width - 50 - money.get_width() // 2, 15 - money.get_height() // 2))
+
+    def draw_hp(self):
+        pygame.draw.rect(self.screen, pygame.Color('black'), (50, 320, 70, 20))
+        pygame.draw.rect(self.screen, pygame.Color('black'), (self.width - 85, 320, 70, 20))
+        font = pygame.font.Font(None, 20)
+        hp = font.render(f'{self.field.towers[1].health}/1500', True, 'white')
+        self.screen.blit(hp, (85 - hp.get_width() // 2, 330 - hp.get_height() // 2))
+        font = pygame.font.Font(None, 20)
+        hp = font.render(f'{self.field.towers[-1].health}/{1500 * self.active_level}', True, 'white')
+        self.screen.blit(hp, (self.width - 50 - hp.get_width() // 2, 330 - hp.get_height() // 2))
+
+
+    def passive_LEVEL(self):
+        self.screen.fill('white')
+        self.draw_LEVEL()
+        self.draw_money()
         self.render_summon_buttons()
         for display_level in self.field.display_levels:
             for team in [-1, 0, 1]:
@@ -246,6 +260,7 @@ class Display:
             if self.field.winner():
                 self.winner_team = self.field.winner()
                 self.condition = END_SCREEN
+        self.draw_hp()
 
     def active_LEVEL(self, event):
         if event.type == pygame.KEYDOWN:
