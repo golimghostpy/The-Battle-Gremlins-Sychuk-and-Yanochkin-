@@ -1,4 +1,4 @@
-0 1 0.1 10 500 100 Basic_Gremlin 1000 0
+0 1 0.1 10 500 100 Axe_Gremlin 1000 0
 0 -1 0.1 10 500 100 Basic_Gremlin 1500 0
 1500 -1 0.1 10 500 100 Basic_Gremlin 1500 0
 3000 -1 0.1 10 500 100 Basic_Gremlin 1500 0
