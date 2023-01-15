@@ -9,8 +9,10 @@ LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5, MAIN, LEVELS, UNITS, END_SCREEN = 1
 BOSS_DIALOG = 10
 #  ----------
 HEIGHT = 325
-limits = [2000, 3000, 5000, 6000, 7000, 13000]
+limits = [2000, 3000, 5000, 6000, 6500, 13000]
 costs = [75, 150, 300, 600, 800, 1500]
+standard_money_coefficient = 0.15
+base_hp = 3000
 
 
 class Display:
@@ -26,9 +28,9 @@ class Display:
         self.sprites = pygame.sprite.Group()
         self.active_level = None
         self.winner_team = None
-        self.timers = [2000, 3000, 5000, 6000, 7000, 13000]
+        self.timers = limits.copy()
         self.balance = 0
-        self.money_coefficient = 0.1
+        self.money_coefficient = standard_money_coefficient
         self.cheat_code = [False] * 4
 
 
@@ -92,11 +94,11 @@ class Display:
         self.cheat_code = [False] * 4
         self.clock.tick()
         self.balance = 0
-        self.money_coefficient = 0.1
-        self.timers = [2000, 3000, 5000, 6000, 7000, 13000]
+        self.money_coefficient = standard_money_coefficient
+        self.timers = limits.copy()
         self.field = Field(f'data\\LEVEL_{self.condition}\\schedule.txt', self.sprites)
-        Tower(1, 1500, 'Gremlin_Tower', self.field).put(150)
-        Tower(-1, 1500 * self.condition, 'Human_Tower', self.field).put(640)
+        Tower(1, base_hp, 'Gremlin_Tower', self.field).put(150)
+        Tower(-1, base_hp * self.condition, 'Human_Tower', self.field).put(640)
 
     def draw_UNITS(self):
         self.screen.blit(load_image('menu_background.png', None), (0, 0))
@@ -215,10 +217,10 @@ class Display:
         pygame.draw.rect(self.screen, pygame.Color('black'), (50, 320, 70, 20))
         pygame.draw.rect(self.screen, pygame.Color('black'), (self.width - 85, 320, 70, 20))
         font = pygame.font.Font(None, 20)
-        hp = font.render(f'{max(0, self.field.towers[1].health)}/1500', True, 'white')
+        hp = font.render(f'{max(0, self.field.towers[1].health)}/3000', True, 'white')
         self.screen.blit(hp, (85 - hp.get_width() // 2, 330 - hp.get_height() // 2))
         font = pygame.font.Font(None, 20)
-        hp = font.render(f'{max(0, self.field.towers[-1].health)}/{1500 * self.active_level}', True, 'white')
+        hp = font.render(f'{max(0, self.field.towers[-1].health)}/{base_hp * self.active_level}', True, 'white')
         self.screen.blit(hp, (self.width - 50 - hp.get_width() // 2, 330 - hp.get_height() // 2))
 
 
@@ -241,15 +243,8 @@ class Display:
                         unit.sprite.rect.x += 10 * sin(0.01 * unit.timer)
         self.sprites.draw(self.screen)
         if all(self.cheat_code):
-            self.money_coefficient = 10
-            self.timers = [2000, 3000, 5000, 6000, 7000, 13000]
-            for unit in self.field.units[1]:
-                unit.speed = 0.5
-                unit.damage = inf
-                unit.health = inf
-                unit.haste = 0
-                unit.attack_animations = [100, 100]
-                unit.moving_animation = 100
+            self.money_coefficient = 100 * standard_money_coefficient
+            self.timers = limits.copy()
         if self.paused:
             self.draw_pause()
             self.clock.tick()
@@ -295,22 +290,22 @@ class Display:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 x, y = event.pos
                 if 194 <= x <= 560 and 356 <= y <= 415:
-                    unit_number = (x - 200) // 59
+                    unit_number = min((x - 200) // 59, 5)
                     if self.timers[unit_number] >= limits[unit_number] and self.balance >= costs[unit_number]:
                         self.balance -= costs[unit_number]
                         self.timers[unit_number] = 0
                         if unit_number == 0:
-                            Unit(1, 15, 60, 'Basic_Gremlin', 0, self.field, False).put(bases[1])
+                            Unit(1, 30, 200, 'Basic_Gremlin', 0, self.field, False).put(bases[1])
                         elif unit_number == 1:
-                            Unit(1, 10, 750, 'Wall_Gremlin', 0, self.field, False).put(bases[1])
+                            Unit(1, 10, 1500, 'Wall_Gremlin', 0, self.field, False).put(bases[1])
                         elif unit_number == 2:
-                            Unit(1, 80, 100, 'Axe_Gremlin', 0, self.field, True).put(bases[1])
+                            Unit(1, 100, 450, 'Axe_Gremlin', 0, self.field, True).put(bases[1])
                         elif unit_number == 3:
-                            Unit(1, 130, 300, 'Sausage_Gremlin', 1000, self.field, True).put(bases[1])
+                            Unit(1, 150, 250, 'Sausage_Gremlin', 1000, self.field, True).put(bases[1])
                         elif unit_number == 4:
-                            Unit(1, 200, 500, 'Spear_Gremlin', 1500, self.field, False).put(bases[1])
+                            Unit(1, 300, 800, 'Spear_Gremlin', 1500, self.field, False).put(bases[1])
                         elif unit_number == 5:
-                            Unit(1, 600, 250, 'Shaman_Gremlin', 2000, self.field, True).put(bases[1])
+                            Unit(1, 650, 350, 'Shaman_Gremlin', 3000, self.field, True).put(bases[1])
 
     def passive_END_SCREEN(self):
         self.passive_LEVEL()

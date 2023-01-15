@@ -1,7 +1,7 @@
 import pygame
 
 
-bases = {-1: 640, 1: 150}
+bases = {-1: 650, 1: 140}
 walking, standing, attacking = 0, 1, 2
 
 
@@ -33,10 +33,14 @@ class Field:  # класс поля, контролирующего взаимо
     def main_cycle(self, dt):
         self.time += dt
         # schedule
-        if self.schedule_row < len(self.schedule):
+        if self.schedule_row < len(self.schedule) and self.towers[-1].alive:
             if self.time >= int(self.schedule[self.schedule_row].split()[0]):
                 self.put_unit_from_schedule()
                 self.schedule_row += 1
+        for team in [-1, 1]:
+            if not self.towers[team].alive:
+                for unit in self.units[team]:
+                    self.dead_set.add(unit)
         for team in [1, 0, -1]:
             for unit in self.units[team]:
                 unit.tick(dt)
@@ -86,8 +90,7 @@ class Unit:  # класс боевого юнита
             text = stats.readline().split()
             self.distance, self.speed, self.range = int(text[0]), float(text[1]), int(text[2])
             self.attack_animations = [int(text[3]), int(text[4])]
-            self.moving_animation = int(text[5])
-            # скорость движения и дальность атаки юнита
+            self.moving_animation = int(text[5])  # скорость движения и дальность атаки юнита
         self.timer = self.haste
         self.phase = 0
         self.phase_timer = 0
@@ -101,6 +104,7 @@ class Unit:  # класс боевого юнита
                 self.display_level = i
                 self.field.display_levels[i][self.team] = self
                 return
+        self.display_level = len(self.field.display_levels)
         self.field.display_levels.append({1: None, 0: None, -1: None})
         self.field.display_levels[-1][self.team] = self
 
