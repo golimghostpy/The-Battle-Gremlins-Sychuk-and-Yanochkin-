@@ -133,6 +133,13 @@ class Unit:  # класс боевого юнита
             self.field.dead_set.add(self)
 
     def tick(self, dt):  # действия юнита за время dt
+        self.get_purpose(dt)
+        self.act(dt)
+
+    def picture(self):  # юнит возвращает изображение для отрисовки себя
+        return f'Sprites\\{self.images}\\animation{self.condition}{self.phase}.png'
+
+    def get_purpose(self, dt):
         self.timer += dt
         if self.field.attack_check(self):
             if self.condition == attacking:
@@ -163,10 +170,6 @@ class Unit:  # класс боевого юнита
                 if self.phase_timer >= self.attack_animations[self.phase]:
                     self.phase = 1 - self.phase
                     self.phase_timer = 0
-        self.act(dt)
-
-    def picture(self):  # юнит возвращает изображение для отрисовки себя
-        return f'Sprites\\{self.images}\\animation{self.condition}{self.phase}.png'
 
     def act(self, dt):
         if self.condition == walking:
