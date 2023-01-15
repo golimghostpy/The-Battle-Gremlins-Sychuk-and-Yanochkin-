@@ -1,7 +1,7 @@
 import pygame
 import os
 import sys
-from math import sin, inf
+from math import sin
 from mechanics import *
 
 #  conditions
@@ -43,7 +43,11 @@ class Display:
         self.cheat_code = [False] * 4
         self.score = None
         self.unit_show = None
-
+        self.next = None
+        self.lvl_menu = None
+        self.cont = None
+        self.restart = None
+        self.esc = None
 
     def build(self):
         pygame.init()
@@ -196,8 +200,9 @@ class Display:
         score = font.render(f'Result: {self.score}', True, 'black')
         self.screen.blit(score, (self.width // 2 - score.get_width() // 2, self.height // 2 - 50))
         font = pygame.font.Font(None, 36)
-        self.next = font.render('Next level', True, 'black')
-        self.screen.blit(self.next, (self.width // 2 - self.next.get_width() // 2, self.height // 2 + 40))
+        if result == 'Victory':
+            self.next = font.render('Next level', True, 'black')
+            self.screen.blit(self.next, (self.width // 2 - self.next.get_width() // 2, self.height // 2 + 40))
         self.lvl_menu = font.render('Level menu', True, 'black')
         self.screen.blit(self.lvl_menu, (self.width // 2 - self.lvl_menu.get_width() // 2, self.height // 2 + 80))
 
@@ -394,15 +399,16 @@ class Display:
     def active_END_SCREEN(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
-            if self.width // 2 - self.next.get_width() // 2 <= x <= self.width // 2 + self.next.get_width() // 2 \
-                    and self.height // 2 + 40 <= y <= self.height // 2 + 40 + self.next.get_height():
-                if 1 <= self.active_level <= 4:
-                    self.paused = False
-                    self.condition = self.active_level + 1
-                    self.starting_LEVEL()
-                else:
-                    self.condition = BOSS_DIALOG
-            elif self.width // 2 - self.lvl_menu.get_width() // 2 <= x <= self.width // 2 + self.lvl_menu.get_width() \
+            if self.field.winner() == 1:
+                if self.width // 2 - self.next.get_width() // 2 <= x <= self.width // 2 + self.next.get_width() // 2 \
+                        and self.height // 2 + 40 <= y <= self.height // 2 + 40 + self.next.get_height():
+                    if 1 <= self.active_level <= 4:
+                        self.paused = False
+                        self.condition = self.active_level + 1
+                        self.starting_LEVEL()
+                    else:
+                        self.condition = BOSS_DIALOG
+            if self.width // 2 - self.lvl_menu.get_width() // 2 <= x <= self.width // 2 + self.lvl_menu.get_width() \
                     // 2 and self.height // 2 + 80 <= y <= self.height // 2 + 80 + self.lvl_menu.get_height():
                 self.condition = LEVELS
 
