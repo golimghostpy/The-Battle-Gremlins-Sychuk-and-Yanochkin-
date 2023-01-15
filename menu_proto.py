@@ -3,7 +3,6 @@ import os
 import sys
 from math import sin, inf
 from mechanics import *
-from multiprocessing import Process
 
 #  conditions
 LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5, MAIN, LEVELS, UNITS, END_SCREEN = 1, 2, 3, 4, 5, 6, 7, 8, 9
@@ -15,6 +14,14 @@ costs = [75, 150, 300, 500, 800, 1500]
 standard_money_coefficient = 0.15
 base_hp = 3000
 standard_time = 90000
+STANDARD_UNITS = [
+    Unit(1, 30, 200, 'Basic_Gremlin', 0, None, False),
+    Unit(1, 10, 1500, 'Wall_Gremlin', 0, None, False),
+    Unit(1, 100, 450, 'Axe_Gremlin', 0, None, True),
+    Unit(1, 250, 300, 'Sausage_Gremlin', 1000, None, True),
+    Unit(1, 300, 800, 'Spear_Gremlin', 1500, None, False),
+    Unit(1, 650, 350, 'Shaman_Gremlin', 3000, None, True)
+]
 
 
 class Display:
@@ -34,6 +41,8 @@ class Display:
         self.balance = 0
         self.money_coefficient = standard_money_coefficient
         self.cheat_code = [False] * 4
+        self.score = None
+        self.unit_show = None
 
 
     def build(self):
@@ -99,12 +108,38 @@ class Display:
         self.money_coefficient = standard_money_coefficient
         self.timers = limits.copy()
         self.field = Field(f'data\\LEVEL_{self.condition}\\schedule.txt', self.sprites)
+        self.score = None
         Tower(1, base_hp, 'Gremlin_Tower', self.field).put(150)
         Tower(-1, base_hp * self.condition, 'Human_Tower', self.field).put(640)
 
     def draw_UNITS(self):
         self.screen.blit(load_image('menu_background.png', None), (0, 0))
         self.screen.blit(load_image('back_btn.png'), (self.width // 2 - 83, 330))
+        for i in range(6):
+            pygame.draw.rect(self.screen, pygame.Color('black'), (170 + 79 * i, 0, 61, 61), 2)
+            self.screen.blit(load_image(f'Avas\\ava{i}.png', None), (171 + 79 * i, 1))
+        if self.unit_show is not None:
+            pygame.draw.rect(self.screen, pygame.Color('white'), (0, 80, 754, 250))
+            image = load_image('Sprites\\' + STANDARD_UNITS[self.unit_show].images + '\\animation10.png')
+            self.screen.blit(image, (20, 205 - image.get_height() // 2))
+            font = pygame.font.Font(None, 36)
+            unit = STANDARD_UNITS[self.unit_show]
+            comments = ['Just a gremlin, nothing special',
+                        'Big boi with big shield',
+                        'He\'s gone through several wars...',
+                        'Just a cute sausage (but very clumsy)',
+                        'Probably The Satan (DON\'T ASK HIM)',
+                        'Seems like he can summon Deidara']
+            stats_list = [f'Cost: {costs[self.unit_show]}',
+                          f'HP: {unit.health}',
+                          f'Damage: {unit.damage}',
+                          f'Range: {unit.range}',
+                          f'Cooldown: {limits[self.unit_show] // 1000}',
+                          f'Comment: {comments[self.unit_show]}'
+                          ]
+            for stat in stats_list:
+                stats = font.render(stat, True, 'black')
+                self.screen.blit(stats, (150, 100 - stats.get_height() // 2 + 36 * stats_list.index(stat)))
 
     def move_from_LEVELS_to_START(self, event):
         x, y = event.pos
@@ -154,9 +189,12 @@ class Display:
             result = 'Defeat'
         headline = font.render(result, True, 'black')
         self.screen.blit(headline, (self.width // 2 - headline.get_width() // 2, self.height // 2 - 100))
+        font = pygame.font.Font(None, 72)
+        score = font.render(f'Result: {self.score}', True, 'black')
+        self.screen.blit(score, (self.width // 2 - score.get_width() // 2, self.height // 2 - 50))
         font = pygame.font.Font(None, 36)
         self.next = font.render('Next level', True, 'black')
-        self.screen.blit(self.next, (self.width // 2 - self.next.get_width() // 2, self.height // 2 - 40))
+        self.screen.blit(self.next, (self.width // 2 - self.next.get_width() // 2, self.height // 2 + 40))
         self.lvl_menu = font.render('Level menu', True, 'black')
         self.screen.blit(self.lvl_menu, (self.width // 2 - self.lvl_menu.get_width() // 2, self.height // 2 + 80))
 
@@ -203,7 +241,12 @@ class Display:
         self.screen.blit(hp, (self.width - 50 - hp.get_width() // 2, 330 - hp.get_height() // 2))
 
     def draw_BOSS_DIALOG(self):
-        pass
+        self.screen.fill((212, 25, 32))
+        self.screen.blit(load_image('Avas\\ava.png'), (30, 150))
+        pygame.draw.rect(self.screen, pygame.Color('black'), (0, 300, 754, 132))
+        font = pygame.font.Font(None, 36)
+        dialog = font.render('Fool... You\'re in the time cycle', True, 'white')
+        self.screen.blit(dialog, (10, 310))
 
     def passive_MAIN(self):
         self.draw_MAIN()
@@ -241,7 +284,14 @@ class Display:
                     330 <= y <= 410:
                 pygame.draw.rect(self.screen, pygame.Color('green'),
                                  (self.width // 2 - 83, 330, 166, 80), 2)
+                self.unit_show = None
                 self.condition = MAIN
+            for i in range(6):
+                if 170 + 79 * i <= x <= 231 + 79 * i and 0 <= y <= 61:
+                    if self.unit_show == i:
+                        self.unit_show = None
+                    else:
+                        self.unit_show = i
 
     def passive_LEVEL(self):
         self.screen.fill('white')
@@ -274,6 +324,11 @@ class Display:
             for timer in range(6):
                 self.timers[timer] += dt
             if self.field.winner():
+                if self.score is None:
+                    if self.field.winner() == 1:
+                        self.score = self.get_result()
+                    else:
+                        self.score = 0
                 self.winner_team = self.field.winner()
                 self.condition = END_SCREEN
         self.draw_hp()
@@ -337,8 +392,9 @@ class Display:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
             if self.width // 2 - self.next.get_width() // 2 <= x <= self.width // 2 + self.next.get_width() // 2 \
-                    and self.height // 2 - 40 <= y <= self.height // 2 - 40 + self.next.get_height():
+                    and self.height // 2 + 40 <= y <= self.height // 2 + 40 + self.next.get_height():
                 if 1 <= self.active_level <= 4:
+                    self.paused = False
                     self.condition = self.active_level + 1
                     self.starting_LEVEL()
                 else:
@@ -352,6 +408,7 @@ class Display:
 
     def active_BOSS_DIALOG(self, event):
         if event.type in (pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN):
+            self.condition = self.active_level
             self.starting_LEVEL()
 
     def main_cycle(self):
