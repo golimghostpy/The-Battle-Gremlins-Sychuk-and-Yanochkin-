@@ -3,6 +3,13 @@ import pygame
 
 bases = {-1: 650, 1: 140}
 walking, standing, attacking = 0, 1, 2
+rewards = {
+    'Basic_Gremlin': 0, 'Wall_Gremlin': 0, 'Axe_Gremlin': 0,
+    'Sausage_Gremlin': 0, 'Spear_Gremlin': 0, 'Shaman_Gremlin': 0,
+    'Fat_Human': 250, 'Torch_Human': 500, 'Archer_Human': 750,
+    'Bazuka_Human': 1000, 'Mace_Human': 1250, 'Mage_Human': 10000,
+    'Ghost': 0, 'Gremlin_Tower': 0, 'Human_Tower': 0,
+}
 
 
 class Field:  # класс поля, контролирующего взаимодействие юнитов
@@ -16,6 +23,7 @@ class Field:  # класс поля, контролирующего взаимо
         self.display_levels = [{1: None, 0: None, -1: None} for _ in range(50)]  # уровни отрисовки
         self.time = 0
         self.schedule_row = 0
+        self.boss = None
 
     def winner(self):  # выводит победителя (игрок / противник / никто)
         if self.towers[1].alive and self.towers[-1].alive:
@@ -31,6 +39,7 @@ class Field:  # класс поля, контролирующего взаимо
         Unit(team, damage, health, images, haste, self, area).put(bases[team])
 
     def main_cycle(self, dt):
+        reward = 0
         self.time += dt
         # schedule
         if self.schedule_row < len(self.schedule) and self.towers[-1].alive:
@@ -46,6 +55,7 @@ class Field:  # класс поля, контролирующего взаимо
                 unit.tick(dt)
         for unit in self.dead_set:
             unit.disappear()
+            reward += rewards[unit.images]
         self.dead_set.clear()
         for team in [-1, 1]:
             for unit in self.units[team]:
@@ -56,6 +66,7 @@ class Field:  # класс поля, контролирующего взаимо
                             unit.condition = standing
                     else:
                         unit.condition = walking
+        return reward
 
     def attack_check(self, unit):  # проверка на то, может ли атаковать юнит
         for enemy in self.units[-unit.team]:
@@ -99,6 +110,8 @@ class Unit:  # класс боевого юнита
         self.field.units[self.team].add(self)
         self.position = position
         self.field.sprites.add(self.sprite)
+        if self.images == 'Mage_Human':
+            self.field.boss = self
         for i in range(len(self.field.display_levels)):
             if not self.field.display_levels[i][self.team]:
                 self.display_level = i
@@ -141,10 +154,15 @@ class Unit:  # класс боевого юнита
                 if self.phase_timer >= self.moving_animation:
                     self.phase = 1 - self.phase
                     self.phase_timer = 0
-            else:
+            elif self.condition == standing:
                 self.condition = walking
                 self.phase = 0
                 self.phase_timer = 0
+            else:
+                self.phase_timer += dt
+                if self.phase_timer >= self.attack_animations[self.phase]:
+                    self.phase = 1 - self.phase
+                    self.phase_timer = 0
         self.act(dt)
 
     def picture(self):  # юнит возвращает изображение для отрисовки себя

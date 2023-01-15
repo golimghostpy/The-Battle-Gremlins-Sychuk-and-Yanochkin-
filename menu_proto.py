@@ -3,16 +3,18 @@ import os
 import sys
 from math import sin, inf
 from mechanics import *
+from multiprocessing import Process
 
 #  conditions
 LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5, MAIN, LEVELS, UNITS, END_SCREEN = 1, 2, 3, 4, 5, 6, 7, 8, 9
 BOSS_DIALOG = 10
 #  ----------
 HEIGHT = 325
-limits = [2000, 3000, 5000, 6000, 6500, 13000]
-costs = [75, 150, 300, 600, 800, 1500]
+limits = [2000, 3000, 5000, 5500, 6500, 13000]
+costs = [75, 150, 300, 500, 800, 1500]
 standard_money_coefficient = 0.15
 base_hp = 3000
+standard_time = 90000
 
 
 class Display:
@@ -139,6 +141,9 @@ class Display:
     def draw_LEVEL(self):
         self.screen.blit(load_image(f'LEVEL_{self.active_level}\\background.png', None), (0, 0))
 
+    def get_result(self):
+        return int(base_hp + self.field.towers[1].health * (1 - self.field.time / standard_time))
+
     def draw_END_SCREEN(self):
         pygame.draw.rect(self.screen, pygame.Color('Grey'),
                          (self.width // 4, self.height // 4, self.width // 2, self.height // 2))
@@ -168,6 +173,37 @@ class Display:
         self.screen.blit(self.restart, (self.width // 2 - self.restart.get_width() // 2, self.height // 2 + 20))
         self.esc = font.render('Escape', True, 'black')
         self.screen.blit(self.esc, (self.width // 2 - self.esc.get_width() // 2, self.height // 2 + 80))
+
+    def draw_money(self):
+        pygame.draw.rect(self.screen, pygame.Color('black'), (self.width - 100, 0, 100, 30))
+        font = pygame.font.Font(None, 30)
+        money = font.render(f'{int(self.balance)}', True, 'white')
+        self.screen.blit(money, (self.width - 50 - money.get_width() // 2, 15 - money.get_height() // 2))
+
+    def render_summon_buttons(self):
+        pygame.draw.rect(self.screen, pygame.Color('black'), (200, 417, 356, 20))
+        for i in range(6):
+            pygame.draw.rect(self.screen, pygame.Color('black'), (200 + 59 * i, 356, 61, 61), 2)
+            self.screen.blit(load_image(f'Avas\\ava{i}.png', None), (201 + 59 * i, 357))
+            pygame.draw.rect(self.screen, pygame.Color('black'),
+                             (200 + 59 * i, 356 + (61 - 61 * (limits[i] - self.timers[i]) // limits[i]),
+                              61, 356 + 61 * (limits[i] - self.timers[i]) // limits[i]))
+            font = pygame.font.Font(None, 18)
+            cost = font.render(f'{costs[i]}', True, 'white')
+            self.screen.blit(cost, (200 + 59 * (i + 1) - 28 - cost.get_width() // 2, 418))
+
+    def draw_hp(self):
+        pygame.draw.rect(self.screen, pygame.Color('black'), (50, 320, 70, 20))
+        pygame.draw.rect(self.screen, pygame.Color('black'), (self.width - 85, 320, 70, 20))
+        font = pygame.font.Font(None, 20)
+        hp = font.render(f'{max(0, self.field.towers[1].health)}/3000', True, 'white')
+        self.screen.blit(hp, (85 - hp.get_width() // 2, 330 - hp.get_height() // 2))
+        font = pygame.font.Font(None, 20)
+        hp = font.render(f'{max(0, self.field.towers[-1].health)}/{base_hp * self.active_level}', True, 'white')
+        self.screen.blit(hp, (self.width - 50 - hp.get_width() // 2, 330 - hp.get_height() // 2))
+
+    def draw_BOSS_DIALOG(self):
+        pass
 
     def passive_MAIN(self):
         self.draw_MAIN()
@@ -207,23 +243,6 @@ class Display:
                                  (self.width // 2 - 83, 330, 166, 80), 2)
                 self.condition = MAIN
 
-    def draw_money(self):
-        pygame.draw.rect(self.screen, pygame.Color('black'), (self.width - 100, 0, 100, 30))
-        font = pygame.font.Font(None, 30)
-        money = font.render(f'{int(self.balance)}', True, 'white')
-        self.screen.blit(money, (self.width - 50 - money.get_width() // 2, 15 - money.get_height() // 2))
-
-    def draw_hp(self):
-        pygame.draw.rect(self.screen, pygame.Color('black'), (50, 320, 70, 20))
-        pygame.draw.rect(self.screen, pygame.Color('black'), (self.width - 85, 320, 70, 20))
-        font = pygame.font.Font(None, 20)
-        hp = font.render(f'{max(0, self.field.towers[1].health)}/3000', True, 'white')
-        self.screen.blit(hp, (85 - hp.get_width() // 2, 330 - hp.get_height() // 2))
-        font = pygame.font.Font(None, 20)
-        hp = font.render(f'{max(0, self.field.towers[-1].health)}/{base_hp * self.active_level}', True, 'white')
-        self.screen.blit(hp, (self.width - 50 - hp.get_width() // 2, 330 - hp.get_height() // 2))
-
-
     def passive_LEVEL(self):
         self.screen.fill('white')
         self.draw_LEVEL()
@@ -250,7 +269,7 @@ class Display:
             self.clock.tick()
         else:
             dt = self.clock.tick()
-            self.field.main_cycle(dt)
+            self.balance += self.field.main_cycle(dt)
             self.balance += self.money_coefficient * dt
             for timer in range(6):
                 self.timers[timer] += dt
@@ -258,6 +277,9 @@ class Display:
                 self.winner_team = self.field.winner()
                 self.condition = END_SCREEN
         self.draw_hp()
+        if self.field.boss:
+            if self.field.boss.health <= 0:
+                self.condition = BOSS_DIALOG
 
     def active_LEVEL(self, event):
         if event.type == pygame.KEYDOWN:
@@ -301,7 +323,7 @@ class Display:
                         elif unit_number == 2:
                             Unit(1, 100, 450, 'Axe_Gremlin', 0, self.field, True).put(bases[1])
                         elif unit_number == 3:
-                            Unit(1, 150, 250, 'Sausage_Gremlin', 1000, self.field, True).put(bases[1])
+                            Unit(1, 250, 300, 'Sausage_Gremlin', 1000, self.field, True).put(bases[1])
                         elif unit_number == 4:
                             Unit(1, 300, 800, 'Spear_Gremlin', 1500, self.field, False).put(bases[1])
                         elif unit_number == 5:
@@ -326,22 +348,11 @@ class Display:
                 self.condition = LEVELS
 
     def passive_BOSS_DIALOG(self):
-        pass
+        self.draw_BOSS_DIALOG()
 
     def active_BOSS_DIALOG(self, event):
-        pass
-
-    def render_summon_buttons(self):
-        pygame.draw.rect(self.screen, pygame.Color('black'), (200, 417, 356, 20))
-        for i in range(6):
-            pygame.draw.rect(self.screen, pygame.Color('black'), (200 + 59 * i, 356, 61, 61), 2)
-            self.screen.blit(load_image(f'Avas\\ava{i}.png', None), (201 + 59 * i, 357))
-            pygame.draw.rect(self.screen, pygame.Color('black'),
-                             (200 + 59 * i, 356 + (61 - 61 * (limits[i] - self.timers[i]) // limits[i]),
-                              61, 356 + 61 * (limits[i] - self.timers[i]) // limits[i]))
-            font = pygame.font.Font(None, 18)
-            cost = font.render(f'{costs[i]}', True, 'white')
-            self.screen.blit(cost, (200 + 59 * (i + 1) - 28 - cost.get_width() // 2, 418))
+        if event.type in (pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN):
+            self.starting_LEVEL()
 
     def main_cycle(self):
         self.running = True
