@@ -32,7 +32,7 @@ class Field:  # класс поля, контролирующего взаимо
             return 1
         return -1
 
-    def put_unit_from_schedule(self):
+    def put_unit_from_schedule(self): # читает статы врагов из .txt и присваивает их
         stats = self.schedule[self.schedule_row].split()
         team, damage, health = int(stats[1]), int(stats[2]), int(stats[3])
         images, haste, area = stats[4], int(stats[5]), bool(int(stats[6]))
@@ -46,17 +46,21 @@ class Field:  # класс поля, контролирующего взаимо
             if self.time >= int(self.schedule[self.schedule_row].split()[0]):
                 self.put_unit_from_schedule()
                 self.schedule_row += 1
+        # проверка живых юнитов
         for team in [-1, 1]:
             if not self.towers[team].alive:
                 for unit in self.units[team]:
                     self.dead_set.add(unit)
+        # начало следующей итерации для живых юнитов
         for team in [1, 0, -1]:
             for unit in self.units[team]:
                 unit.tick(dt)
+        # уничтожение мертвых юнитов
         for unit in self.dead_set:
             unit.disappear()
             reward += rewards[unit.images]
         self.dead_set.clear()
+        # переключение состояний живых юнитов
         for team in [-1, 1]:
             for unit in self.units[team]:
                 if unit.condition == standing:
@@ -139,7 +143,7 @@ class Unit:  # класс боевого юнита
     def picture(self):  # юнит возвращает изображение для отрисовки себя
         return f'Sprites\\{self.images}\\animation{self.condition}{self.phase}.png'
 
-    def get_purpose(self, dt):
+    def get_purpose(self, dt): # юнит получает команду о том, что ему делать (идти/стоять/атаковать)
         self.timer += dt
         if self.field.attack_check(self):
             if self.condition == attacking:
@@ -171,7 +175,7 @@ class Unit:  # класс боевого юнита
                     self.phase = 1 - self.phase
                     self.phase_timer = 0
 
-    def act(self, dt):
+    def act(self, dt): # произведение всех действий юнита
         if self.condition == walking:
             self.position += self.team * self.speed * dt
         elif self.condition == attacking:
