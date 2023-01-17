@@ -4,10 +4,10 @@ import sys
 from math import sin
 from mechanics import *
 
-#  conditions
+# сцены
 LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5, MAIN, LEVELS, UNITS, END_SCREEN = 1, 2, 3, 4, 5, 6, 7, 8, 9
 BOSS_DIALOG = 10
-#  ----------
+#  разного рода константы
 HEIGHT = 325
 limits = [2000, 3000, 5000, 5500, 6500, 13000]
 costs = [75, 150, 300, 500, 800, 1500]
@@ -26,7 +26,7 @@ STANDARD_UNITS = [
 
 class Display:
     def __init__(self):
-        self.condition = MAIN  # активное окно
+        self.condition = MAIN  # активная сцена
         self.width = 754
         self.height = 432
         self.screen = None
@@ -39,31 +39,26 @@ class Display:
         self.winner_team = None  # команда победителя
         self.timers = limits.copy()
         self.balance = 0  # деньги на уровне
-        self.money_coefficient = standard_money_coefficient  # множитель для денег
+        self.money_coefficient = standard_money_coefficient  # скорость накопления денег игрока
         self.cheat_code = [False] * 4
-        self.score = None # счёт
+        self.score = None  # счёт
         self.unit_show = None
-        self.next = None
-        self.lvl_menu = None
-        self.cont = None
-        self.restart = None
-        self.esc = None
 
-    def build(self): # создание окна
+    def build(self):  # создание окна приложения
         pygame.init()
         pygame.display.set_caption('The Battle Gremlins')
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.screen.fill((0, 0, 0))
         self.main_cycle()
 
-    def draw_MAIN(self): # отрисовка главного меню
+    def draw_MAIN(self):  # отрисовка главного меню
         self.screen.blit(load_image('menu_background.png', None), (0, 0))
         self.screen.blit(load_image('MAIN\\title.png'), (self.width // 2 - 247, self.height // 5))
         self.screen.blit(load_image('MAIN\\start_button.png'), (self.width // 2 - 118, self.height // 5 * 2))
         self.screen.blit(load_image('MAIN\\gremlins_menu.png'), (self.width // 2 - 86, self.height // 5 * 3))
         self.screen.blit(load_image('MAIN\\quit.png'), (self.width // 2 - 45, self.height // 5 * 4))
 
-    def move_from_MAIN_to_LEVELS(self, event): # переход из главного меню в меню уровней
+    def move_from_MAIN_to_LEVELS(self, event):  # переход из главного меню в меню уровней
         x, y = event.pos
         if self.width // 2 - 118 <= x <= self.width // 2 + 118 and \
                 self.height // 5 * 2 <= y <= self.height // 5 * 2 + 56:
@@ -73,7 +68,7 @@ class Display:
             return True
         return False
 
-    def move_from_MAIN_to_UNITS(self, event): # переход из главного меню в меню с юнитами
+    def move_from_MAIN_to_UNITS(self, event):  # переход из главного меню в меню с юнитами
         x, y = event.pos
         if self.width // 2 - 86 <= x <= self.width // 2 + 86 and \
                 self.height // 5 * 3 <= y <= self.height // 5 * 3 + 53:
@@ -83,7 +78,7 @@ class Display:
             return True
         return False
 
-    def leave_game_from_MAIN(self, event): # кнопка выхода
+    def leave_game_from_MAIN(self, event):  # кнопка выхода
         x, y = event.pos
         if self.width // 2 - 45 <= x <= self.width // 2 + 45 and \
                 self.height // 5 * 4 <= y <= self.height // 5 * 4 + 53:
@@ -93,7 +88,7 @@ class Display:
             return True
         return False
 
-    def draw_LEVELS(self): # отрисовка меню уровней
+    def draw_LEVELS(self):  # отрисовка меню уровней
         self.screen.blit(load_image('menu_background.png', None), (0, 0))
         self.screen.blit(load_image('LEVELS\\levels_txt.png'), (self.width // 2 - 100, 20))
         self.screen.blit(load_image('LEVELS\\level_1.png'), (self.width // 5 - 110, self.height // 4))
@@ -103,7 +98,7 @@ class Display:
         self.screen.blit(load_image('LEVELS\\level_5.png'), (self.width - 110, self.height // 4))
         self.screen.blit(load_image('back_btn.png'), (self.width // 2 - 83, 330))
 
-    def starting_LEVEL(self): # запуск уровня
+    def starting_LEVEL(self):  # запуск уровня
         self.sprites = pygame.sprite.Group()
         self.winner_team = None
         self.cheat_code = [False] * 4
@@ -116,7 +111,7 @@ class Display:
         Tower(1, base_hp, 'Gremlin_Tower', self.field).put(150)
         Tower(-1, base_hp * self.condition // 2, 'Human_Tower', self.field).put(640)
 
-    def draw_UNITS(self): # отрисовка меню юнитов
+    def draw_UNITS(self):  # отрисовка меню юнитов
         self.screen.blit(load_image('menu_background.png', None), (0, 0))
         self.screen.blit(load_image('back_btn.png'), (self.width // 2 - 83, 330))
         for i in range(6):
@@ -148,7 +143,7 @@ class Display:
                 stats = font.render(stat, True, 'black')
                 self.screen.blit(stats, (150, 100 - stats.get_height() // 2 + 36 * stats_list.index(stat)))
 
-    def move_from_LEVELS_to_START(self, event): # переключение из меню уровней на уровень
+    def move_from_LEVELS_to_START(self, event):  # переключение из меню уровней на уровень
         x, y = event.pos
         if self.width // 5 - 110 <= x <= self.width // 5 - 30 and self.height // 4 <= y <= self.height // 4 + 80:
             pygame.draw.rect(self.screen, pygame.Color('green'),
@@ -180,13 +175,13 @@ class Display:
             return True
         return False
 
-    def draw_LEVEL(self): # отрисовк уровня
+    def draw_LEVEL(self):  # отрисовка уровня
         self.screen.blit(load_image(f'LEVEL_{self.active_level}\\background.png', None), (0, 0))
 
-    def get_result(self): # получение результата
+    def get_result(self):  # получение результата
         return max(0, int(base_hp + self.field.towers[1].health * (1 - self.field.time / standard_time)))
 
-    def draw_END_SCREEN(self): # отрисовка окна после победы/поражения
+    def draw_END_SCREEN(self):  # отрисовка окна после победы/поражения
         pygame.draw.rect(self.screen, pygame.Color('Grey'),
                          (self.width // 4, self.height // 4, self.width // 2, self.height // 2))
         font = pygame.font.Font(None, 50)
@@ -206,7 +201,7 @@ class Display:
         self.lvl_menu = font.render('Level menu', True, 'black')
         self.screen.blit(self.lvl_menu, (self.width // 2 - self.lvl_menu.get_width() // 2, self.height // 2 + 80))
 
-    def draw_pause(self): # отрисовка паузы
+    def draw_pause(self):  # отрисовка паузы
         pygame.draw.rect(self.screen, pygame.Color('Grey'),
                          (self.width // 4, self.height // 4, self.width // 2, self.height // 2))
         font = pygame.font.Font(None, 50)
@@ -220,13 +215,13 @@ class Display:
         self.esc = font.render('Escape', True, 'black')
         self.screen.blit(self.esc, (self.width // 2 - self.esc.get_width() // 2, self.height // 2 + 80))
 
-    def draw_money(self): # отрисовка денег
+    def draw_money(self):  # отрисовка денег
         pygame.draw.rect(self.screen, pygame.Color('black'), (self.width - 100, 0, 100, 30))
         font = pygame.font.Font(None, 30)
         money = font.render(f'{int(self.balance)}', True, 'white')
         self.screen.blit(money, (self.width - 50 - money.get_width() // 2, 15 - money.get_height() // 2))
 
-    def draw_summon_buttons(self): # отрисовка кнопок для призыва юнитов
+    def draw_summon_buttons(self):  # отрисовка кнопок для призыва юнитов
         pygame.draw.rect(self.screen, pygame.Color('black'), (200, 417, 356, 20))
         for i in range(6):
             pygame.draw.rect(self.screen, pygame.Color('black'), (200 + 59 * i, 356, 61, 61), 2)
@@ -238,7 +233,7 @@ class Display:
             cost = font.render(f'{costs[i]}', True, 'white')
             self.screen.blit(cost, (200 + 59 * (i + 1) - 28 - cost.get_width() // 2, 418))
 
-    def draw_hp(self): # отрисовка здоровья башен
+    def draw_hp(self):  # отрисовка здоровья башен
         pygame.draw.rect(self.screen, pygame.Color('black'), (45, 320, 80, 20))
         pygame.draw.rect(self.screen, pygame.Color('black'), (self.width - 90, 320, 80, 20))
         font = pygame.font.Font(None, 20)
@@ -248,7 +243,7 @@ class Display:
         hp = font.render(f'{max(0, self.field.towers[-1].health)}/{base_hp * self.active_level // 2}', True, 'white')
         self.screen.blit(hp, (self.width - 50 - hp.get_width() // 2, 330 - hp.get_height() // 2))
 
-    def draw_BOSS_DIALOG(self): # отрисовка диалога с боссом
+    def draw_BOSS_DIALOG(self):  # отрисовка диалога с боссом
         self.screen.fill((212, 25, 32))
         self.screen.blit(load_image('Avas\\ava.png'), (30, 150))
         pygame.draw.rect(self.screen, pygame.Color('black'), (0, 300, 754, 132))
@@ -259,7 +254,7 @@ class Display:
     def passive_MAIN(self):
         self.draw_MAIN()
 
-    def active_MAIN(self, event): # нажатия кнопок в главном меню
+    def active_MAIN(self, event):  # нажатия кнопок в главном меню
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.move_from_MAIN_to_LEVELS(event):
                 return
@@ -271,7 +266,7 @@ class Display:
     def passive_LEVELS(self):
         self.draw_LEVELS()
 
-    def active_LEVELS(self, event): # нажатия кнопок в меню уровней
+    def active_LEVELS(self, event):  # нажатия кнопок в меню уровней
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
             if self.width // 2 - 83 <= x <= self.width // 2 + 83 and 330 <= y <= 410:
@@ -285,7 +280,7 @@ class Display:
     def passive_UNITS(self):
         self.draw_UNITS()
 
-    def active_UNITS(self, event): # нажатие кнопок в меню юнитов
+    def active_UNITS(self, event):  # нажатие кнопок в меню юнитов
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
             if self.width // 2 - 83 <= x <= self.width // 2 + 83 and \
@@ -307,8 +302,7 @@ class Display:
         self.draw_money()
         self.draw_summon_buttons()
         for display_level in self.field.display_levels:
-            # отрисовка юнитов
-            for team in [-1, 0, 1]:
+            for team in [-1, 0, 1]:  # отрисовка юнитов
                 if display_level[team]:
                     unit = display_level[team]
                     unit.sprite.image = load_image(unit.picture())
@@ -335,7 +329,7 @@ class Display:
             self.balance += self.money_coefficient * dt
             for timer in range(6):
                 self.timers[timer] += dt
-            # ели есть победитель - отклыть финишное окно
+            # ели есть победитель - открыть финишное окно
             if self.field.winner():
                 if self.score is None:
                     if self.field.winner() == 1:
@@ -403,8 +397,7 @@ class Display:
         self.passive_LEVEL()
         self.draw_END_SCREEN()
 
-    # нажатие кнопок в финишном окне
-    def active_END_SCREEN(self, event):
+    def active_END_SCREEN(self, event):  # нажатие кнопок в финишном окне
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
             if self.field.winner() == 1:
@@ -428,7 +421,7 @@ class Display:
             self.condition = self.active_level
             self.starting_LEVEL()
 
-    def main_cycle(self):
+    def main_cycle(self):  # основной цикл приложения
         self.running = True
         while self.running:
             if self.condition == MAIN:

@@ -32,7 +32,7 @@ class Field:  # класс поля, контролирующего взаимо
             return 1
         return -1
 
-    def put_unit_from_schedule(self): # читает статы врагов из .txt и присваивает их
+    def put_unit_from_schedule(self):  # читает статы врагов из .txt и присваивает их
         stats = self.schedule[self.schedule_row].split()
         team, damage, health = int(stats[1]), int(stats[2]), int(stats[3])
         images, haste, area = stats[4], int(stats[5]), bool(int(stats[6]))
@@ -41,7 +41,7 @@ class Field:  # класс поля, контролирующего взаимо
     def main_cycle(self, dt):
         reward = 0
         self.time += dt
-        # schedule
+        # спавн юнитов противника в соответствии с расписанием
         if self.schedule_row < len(self.schedule) and self.towers[-1].alive:
             if self.time >= int(self.schedule[self.schedule_row].split()[0]):
                 self.put_unit_from_schedule()
@@ -143,7 +143,7 @@ class Unit:  # класс боевого юнита
     def picture(self):  # юнит возвращает изображение для отрисовки себя
         return f'Sprites\\{self.images}\\animation{self.condition}{self.phase}.png'
 
-    def get_purpose(self, dt): # юнит получает команду о том, что ему делать (идти/стоять/атаковать)
+    def get_purpose(self, dt):  # юнит получает информацию о том, что ему делать (идти/стоять/атаковать)
         self.timer += dt
         if self.field.attack_check(self):
             if self.condition == attacking:
@@ -175,7 +175,7 @@ class Unit:  # класс боевого юнита
                     self.phase = 1 - self.phase
                     self.phase_timer = 0
 
-    def act(self, dt): # произведение всех действий юнита
+    def act(self, dt):  # произведение всех действий юнита
         if self.condition == walking:
             self.position += self.team * self.speed * dt
         elif self.condition == attacking:
