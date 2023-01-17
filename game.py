@@ -445,22 +445,24 @@ class Display:
             elif self.condition == BOSS_DIALOG:
                 self.passive_BOSS_DIALOG()
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
+                try:
+                    if event.type == pygame.QUIT:
+                        self.running = False
+                    elif self.condition == MAIN:
+                        self.active_MAIN(event)
+                    elif self.condition == LEVELS:
+                        self.active_LEVELS(event)
+                    elif self.condition == UNITS:
+                        self.active_UNITS(event)
+                    elif self.condition in [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5]:
+                        self.active_level = self.condition
+                        self.active_LEVEL(event)
+                    elif self.condition == END_SCREEN:
+                        self.active_END_SCREEN(event)
+                    elif self.condition == BOSS_DIALOG:
+                        self.active_BOSS_DIALOG(event)
+                except Exception:
                     continue
-                if self.condition == MAIN:
-                    self.active_MAIN(event)
-                elif self.condition == LEVELS:
-                    self.active_LEVELS(event)
-                elif self.condition == UNITS:
-                    self.active_UNITS(event)
-                elif self.condition in [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5]:
-                    self.active_level = self.condition
-                    self.active_LEVEL(event)
-                elif self.condition == END_SCREEN:
-                    self.active_END_SCREEN(event)
-                elif self.condition == BOSS_DIALOG:
-                    self.active_BOSS_DIALOG(event)
             pygame.display.flip()
         pygame.quit()
 
